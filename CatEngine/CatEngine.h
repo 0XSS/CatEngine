@@ -32,7 +32,7 @@
 /* The condition of CatEngine to use */
 
 #if !defined(_WIN32) && !defined(_WIN64)
-#error CatEngine just available for Windows (32-bit and 64-bit) platform
+  #error CatEngine just available for Windows (32-bit and 64-bit) platform
 #endif // !defined(_WIN32) && !defined(_WIN64)
 
 #ifndef __cplusplus
@@ -44,19 +44,18 @@
 /* Header Inclusion */
 
 #if defined(_MSC_VER)
-#pragma once
+  #pragma once
 #endif
 
 #include <Windows.h>
 #include <TlHelp32.h>
-#include <WinSock.h>
 #include <string>
-#include <cstdio>
 #include <vector>
 #include <list>
 #include <ctime>
 #include <memory>
 #include <algorithm>
+#include <cstdio>
 
 
 
@@ -339,70 +338,56 @@ namespace HDE {
 
 namespace std {
   #ifdef _UNICODE
-  #define tcerr           wcerr
-  #define tcin            wcin
-  #define tclog           wclog
-  #define tcout           wcout
+    #define tcerr           wcerr
+    #define tcin            wcin
+    #define tclog           wclog
+    #define tcout           wcout
 
-  typedef wstring         tstring;
+    typedef wstring         tstring;
 
-  typedef wstringbuf      tstringbuf;
-  typedef wstringstream   tstringstream;
-  typedef wostringstream  tostringstream;
-  typedef wistringstream  tistringstream;
+    typedef wstringbuf      tstringbuf;
+    typedef wstringstream   tstringstream;
+    typedef wostringstream  tostringstream;
+    typedef wistringstream  tistringstream;
 
-  typedef wstreambuf      tstreambuf;
+    typedef wstreambuf      tstreambuf;
 
-  typedef wistream        tistream;
-  typedef wostream        tostream;
-  typedef wiostream       tiostream;
+    typedef wistream        tistream;
+    typedef wostream        tostream;
+    typedef wiostream       tiostream;
 
-  typedef wfilebuf        tfilebuf;
-  typedef wfstream        tfstream;
-  typedef wifstream       tifstream;
-  typedef wofstream       tofstream;
+    typedef wfilebuf        tfilebuf;
+    typedef wfstream        tfstream;
+    typedef wifstream       tifstream;
+    typedef wofstream       tofstream;
 
-  typedef wios            tios;
+    typedef wios            tios;
   #else   // !_UNICODE
-  #define tcerr           cerr
-  #define tcin            cin
-  #define tclog           clog
-  #define tcout           cout
+    #define tcerr           cerr
+    #define tcin            cin
+    #define tclog           clog
+    #define tcout           cout
 
-  typedef string          tstring;
+    typedef string          tstring;
 
-  typedef stringbuf       tstringbuf;
-  typedef stringstream    tstringstream;
-  typedef ostringstream   tostringstream;
-  typedef istringstream   tistringstream;
+    typedef stringbuf       tstringbuf;
+    typedef stringstream    tstringstream;
+    typedef ostringstream   tostringstream;
+    typedef istringstream   tistringstream;
 
-  typedef streambuf       tstreambuf;
+    typedef streambuf       tstreambuf;
 
-  typedef istream         tistream;
-  typedef ostream         tostream;
-  typedef iostream        tiostream;
+    typedef istream         tistream;
+    typedef ostream         tostream;
+    typedef iostream        tiostream;
 
-  typedef filebuf         tfilebuf;
-  typedef fstream         tfstream;
-  typedef ifstream        tifstream;
-  typedef ofstream        tofstream;
+    typedef filebuf         tfilebuf;
+    typedef fstream         tfstream;
+    typedef ifstream        tifstream;
+    typedef ofstream        tofstream;
 
-  typedef ios             tios;
+    typedef ios             tios;
   #endif  // _UNICODE
-
-  template<typename T>
-  std::string to_string(T v)
-  {
-    std::string s = "";
-    return s;
-  }
-
-  template<typename T>
-  std::wstring to_wstring(T v)
-  {
-    std::wstring ws = L"";
-    return ws;
-  }
 } // namespace std
 
 namespace ce {
@@ -412,13 +397,13 @@ namespace ce {
 #define ceapi __stdcall
 
 #ifdef _UNICODE
-#define T(x)  L ## x
+  #define T(x)  L ## x
 #else   // !_UNICODE
-#define T(x)  x
+  #define T(x)  x
 #endif  // _UNICODE
 
 #ifndef MAXPATH
-#define MAXPATH MAX_PATH
+  #define MAXPATH MAX_PATH
 #endif
 
 #define MAX_NPROCESSES  512
@@ -770,7 +755,7 @@ namespace ce {
     WCHAR   szExeFile[MAX_PATH];    // Path
   } TProcessEntry32W, *PProcessEntry32W;
 
-#define MAX_MODULE_NAME32 255
+  #define MAX_MODULE_NAME32 255
 
   typedef struct _MODULEENTRY32A {
     DWORD   dwSize;
@@ -1156,6 +1141,8 @@ namespace ce {
   void ceapi ceHexDump(void * Data, int Size);
 
   /* --- Cat: String Formatting --- */
+  int ceapi ceGetFormattedStringLengthA(const std::string Format, ...);
+  int ceapi ceGetFormattedStringLengthW(const std::wstring Format, ...);
   std::string ceapi ceFormatA(const std::string Format, ...);
   std::wstring ceapi ceFormatW(const std::wstring Format, ...);
   void ceapi ceMsgA(const std::string Format, ...);
@@ -1221,62 +1208,64 @@ namespace ce {
   /*-------------------- The definition of common Function(s) which compatible both ANSI & UNICODE -------------------*/
 
 #ifdef _UNICODE
-/* --- Cat: Misc Working --- */
-#define ceGetEnviroment ceGetEnviromentW
-/* --- Cat: String Formatting --- */
-#define ceFormat ceFormatW
-#define ceMsg ceMsgW
-#define ceBox ceBoxW
-#define ceLastError ceLastErrorW
-#define ceTimeDateToString ceTimeDateToStringW
-#define ceFormatTimeDateToString ceFormatTimeDateToStringW
-/* --- Cat: String Working --- */
-#define ceLowerString ceLowerStringW
-#define ceUpperString ceUpperStringW
-#define ceSplitString ceSplitStringW
-#define ceMultiStringToList ceMultiStringToListW
-#define ceListToMultiString ceListToMultiStringW
-/* --- Cat: Process Working --- */
-#define ceNameToPid ceNameToPidW
-#define cePidToName cePidToNameW
-#define ceRemoteGetModuleHandle ceRemoteGetModuleHandleW
-  /* --- Cat: File/Directory Working --- */
-#define ceDirectoryExists ceDirectoryExistsW
-#define ceFileType ceFileTypeW
-#define ceFileExists ceFileExistsW
-#define ceExtractFilePath ceExtractFilePathW
-#define ceExtractFileName ceExtractFileNameW
-#define ceGetCurrentFilePath ceGetCurrentFilePathW
-#define ceGetCurrentDirectory ceGetCurrentDirectoryW
-#else
-/* --- Cat: Misc Working --- */
-#define ceGetEnviroment ceGetEnviromentA
-/* --- Cat: String Formatting --- */
-#define ceFormat ceFormatA
-#define ceMsg ceMsgA
-#define ceBox ceBoxA
-#define ceLastError ceLastErrorA
-#define ceTimeDateToString ceTimeDateToStringA
-#define ceFormatTimeDateToString ceFormatTimeDateToStringA
+  /* --- Cat: Misc Working --- */
+  #define ceGetEnviroment ceGetEnviromentW
+  /* --- Cat: String Formatting --- */
+  #define ceGetFormattedLength ceGetFormattedLengthW
+  #define ceFormat ceFormatW
+  #define ceMsg ceMsgW
+  #define ceBox ceBoxW
+  #define ceLastError ceLastErrorW
+  #define ceTimeDateToString ceTimeDateToStringW
+  #define ceFormatTimeDateToString ceFormatTimeDateToStringW
   /* --- Cat: String Working --- */
-#define ceLowerString ceLowerStringA
-#define ceUpperString ceUpperStringA
-#define ceSplitString ceSplitStringA
-#define ceMultiStringToList ceMultiStringToListA
+  #define ceLowerString ceLowerStringW
+  #define ceUpperString ceUpperStringW
+  #define ceSplitString ceSplitStringW
+  #define ceMultiStringToList ceMultiStringToListW
+  #define ceListToMultiString ceListToMultiStringW
   /* --- Cat: Process Working --- */
-#define ceNameToPid ceNameToPidA
-#define cePidToName cePidToNameA
-#define ceRemoteGetModuleHandle ceRemoteGetModuleHandleA
-  /* --- Cat: File/Directory Working --- */
-#define ceDirectoryExists ceDirectoryExistsA
-#define ceMoveDirectory ceMoveDirectoryA
-#define ceFileType ceFileTypeA
-#define ceFileExists ceFileExistsA
-#define ceExtractFilePath ceExtractFilePathA
-#define ceExtractFileName ceExtractFileNameA
-#define ceGetCurrentFilePath ceGetCurrentFilePathA
-#define ceGetCurrentDirectory ceGetCurrentDirectoryA
-#define ceMultiStringToList ceMultiStringToListA
+  #define ceNameToPid ceNameToPidW
+  #define cePidToName cePidToNameW
+  #define ceRemoteGetModuleHandle ceRemoteGetModuleHandleW
+    /* --- Cat: File/Directory Working --- */
+  #define ceDirectoryExists ceDirectoryExistsW
+  #define ceFileType ceFileTypeW
+  #define ceFileExists ceFileExistsW
+  #define ceExtractFilePath ceExtractFilePathW
+  #define ceExtractFileName ceExtractFileNameW
+  #define ceGetCurrentFilePath ceGetCurrentFilePathW
+  #define ceGetCurrentDirectory ceGetCurrentDirectoryW
+#else
+  /* --- Cat: Misc Working --- */
+  #define ceGetEnviroment ceGetEnviromentA
+  /* --- Cat: String Formatting --- */
+  #define ceGetFormattedLength ceGetFormattedLengthA
+  #define ceFormat ceFormatA
+  #define ceMsg ceMsgA
+  #define ceBox ceBoxA
+  #define ceLastError ceLastErrorA
+  #define ceTimeDateToString ceTimeDateToStringA
+  #define ceFormatTimeDateToString ceFormatTimeDateToStringA
+    /* --- Cat: String Working --- */
+  #define ceLowerString ceLowerStringA
+  #define ceUpperString ceUpperStringA
+  #define ceSplitString ceSplitStringA
+  #define ceMultiStringToList ceMultiStringToListA
+    /* --- Cat: Process Working --- */
+  #define ceNameToPid ceNameToPidA
+  #define cePidToName cePidToNameA
+  #define ceRemoteGetModuleHandle ceRemoteGetModuleHandleA
+    /* --- Cat: File/Directory Working --- */
+  #define ceDirectoryExists ceDirectoryExistsA
+  #define ceMoveDirectory ceMoveDirectoryA
+  #define ceFileType ceFileTypeA
+  #define ceFileExists ceFileExistsA
+  #define ceExtractFilePath ceExtractFilePathA
+  #define ceExtractFileName ceExtractFileNameA
+  #define ceGetCurrentFilePath ceGetCurrentFilePathA
+  #define ceGetCurrentDirectory ceGetCurrentDirectoryA
+  #define ceMultiStringToList ceMultiStringToListA
 #endif
 
 
@@ -1298,6 +1287,8 @@ namespace ce {
   };
 
   /* --- Cat : Library --- */
+
+  #define API_GETPROC(M, F) pfn ## F = (Pfn ## F)ce::CELibrary::ceGetRoutineAddressFast(T( # M ), T( # F ))
 
   class CELibraryA : public CELastError {
   public:
@@ -1727,13 +1718,13 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     bool ceapi ceReadBool(const std::string Section, const std::string Key, bool Default);
     float ceapi ceReadFloat(const std::string Section, const std::string Key, float Default);
     std::string ceapi ceReadString(const std::string Section, const std::string Key, const std::string Default);
-    std::shared_ptr<void> ceapi ceReadStruct(const std::string Section, const std::string Key, ulong ulSize);
+    std::shared_ptr<uchar> ceapi ceReadStruct(const std::string Section, const std::string Key, ulong ulSize);
 
     int ceapi ceReadInteger(const std::string Key, int Default);
     bool ceapi ceReadBool(const std::string Key, bool Default);
     float ceapi ceReadFloat(const std::string Key, float Default);
     std::string ceapi ceReadString(const std::string Key, const std::string Default);
-    std::shared_ptr<void> ceapi ceReadStruct(const std::string Key, ulong ulSize);
+    std::shared_ptr<uchar> ceapi ceReadStruct(const std::string Key, ulong ulSize);
 
     bool ceapi ceWriteInteger(const std::string Section, const std::string Key, int Value);
     bool ceapi ceWriteBool(const std::string Section, const std::string Key, bool Value);
@@ -1773,13 +1764,13 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     bool ceapi ceReadBool(const std::wstring Section, const std::wstring Key, bool Default);
     float ceapi ceReadFloat(const std::wstring Section, const std::wstring Key, float Default);
     std::wstring ceapi ceReadString(const std::wstring Section, const std::wstring Key, const std::wstring Default);
-    std::shared_ptr<void> ceapi ceReadStruct(const std::wstring Section, const std::wstring Key, ulong ulSize);
+    std::shared_ptr<uchar> ceapi ceReadStruct(const std::wstring Section, const std::wstring Key, ulong ulSize);
 
     int ceapi ceReadInteger(const std::wstring Key, int Default);
     bool ceapi ceReadBool(const std::wstring Key, bool Default);
     float ceapi ceReadFloat(const std::wstring Key, float Default);
     std::wstring ceapi ceReadString(const std::wstring Key, const std::wstring Default);
-    std::shared_ptr<void> ceapi ceReadStruct(const std::wstring Key, ulong ulSize);
+    std::shared_ptr<uchar> ceapi ceReadStruct(const std::wstring Key, ulong ulSize);
 
     bool ceapi ceWriteInteger(const std::wstring Section, const std::wstring Key, int Value);
     bool ceapi ceWriteBool(const std::wstring Section, const std::wstring Key, bool Value);
@@ -1851,7 +1842,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     std::string ceapi ceReadString(const std::string ValueName, const std::string Default);
     std::list<std::string> ceapi ceReadMultiString(const std::string ValueName, const std::list<std::string> Default);
     std::string ceapi ceReadExpandString(const std::string ValueName, const std::string Default);
-    std::shared_ptr<void> ceapi ceReadBinary(const std::string ValueName, const void * pDefault);
+    std::shared_ptr<uchar> ceapi ceReadBinary(const std::string ValueName, const void * pDefault);
   protected:
   };
 
@@ -1895,7 +1886,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     std::wstring ceapi ceReadString(const std::wstring ValueName, const std::wstring Default);
     std::list<std::wstring> ceapi ceReadMultiString(const std::wstring ValueName, const std::list<std::wstring> Default);
     std::wstring ceapi ceReadExpandString(const std::wstring ValueName, const std::wstring Default);
-    std::shared_ptr<void> ceapi ceReadBinary(const std::wstring ValueName, const void * Default);
+    std::shared_ptr<uchar> ceapi ceReadBinary(const std::wstring ValueName, const void * Default);
   protected:
   };
 

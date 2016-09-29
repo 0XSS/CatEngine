@@ -3,11 +3,15 @@
 
 //#include "stdafx.h"
 
+/* MinGW build EXE with static library
+G++ Test.cpp -o Test.exe --std=c++11 -lCatEngine -lws2_32 && Test.exe
+*/
+
 /*
 #ifdef _UNICODE
   #undef _UNICODE
-#endif
-*/
+#endif*/
+
 
 #include <Windows.h>
 #include <tchar.h>
@@ -27,7 +31,10 @@
 #endif
 
 #include "CatEngine.h"
-#pragma comment(lib, "CatEngine.lib")
+
+#if defined(_MSC_VER) || !defined(__BCPLUSPLUS__)
+  #pragma comment(lib, "CatEngine.lib")
+#endif // _MSC_VER || __BCPLUSPLUS__
 
 #define SEPERATOR() std::tcout << T("----------------------------------------") << std::endl;
 
@@ -118,7 +125,7 @@ int _tmain(int argc, _TCHAR* argv[])
   std::tcout << std::endl;
   
   l.clear();
-  l = ce::ceMultiStringToList(_T("THIS\0IS\0A\0MULTI\0STRING"));
+  l = ce::ceMultiStringToList(_T("THIS\0IS\0A\0MULTI\0STRING\0\0"));
   for (auto& e: l) std::tcout << e << _T("|");
   std::tcout << std::endl;
 
@@ -225,41 +232,37 @@ int _tmain(int argc, _TCHAR* argv[])
   // CEDynHook
   /*ce::CEDynHook API[2];
 
-  // Detour
-
-  if (API_ATTACH(API[0], user32.dll, MessageBoxA)) {
-    MessageBoxA(ce::ceGetConsoleWindow(), "The first message.", "A", MB_OK);
+  if (!API_ATTACH(API[0], user32.dll, MessageBoxA)) {
+      std::cout << "API::ATTACH -> MessageBoxA -> Failure" << std::endl;
+      return 1;
   }
 
-  if (API_DETACH(API[0], user32.dll, MessageBoxA)) {
-    MessageBoxA(ce::ceGetConsoleWindow(), "The second message.", "A", MB_OK);
+  std::cout << "API::ATTACH -> MessageBoxA -> Success" << std::endl;
+
+  if (!API_ATTACH(API[1], user32.dll, MessageBoxW)) {
+      std::cout << "API::ATTACH -> MessageBoxW -> Failure" << std::endl;
+      return 1;
   }
 
-  if (API_ATTACH(API[1], user32.dll, MessageBoxW)) {
-    MessageBoxW(ce::ceGetConsoleWindow(), L"The first message.", L"W", MB_OK);
+  std::cout << "API::ATTACH -> MessageBoxW -> Success" << std::endl;
+
+  MessageBoxA(ce::ceGetConsoleWindow(), "The first message.", "A", MB_OK);
+  MessageBoxW(ce::ceGetConsoleWindow(), L"The first message.", L"W", MB_OK);
+
+  if (!API_DETACH(API[0], user32.dll, MessageBoxA)) {
+      std::cout << "API::DETACH -> MessageBoxA -> Failure" << std::endl;
   }
 
-  if (API_DETACH(API[1], user32.dll, MessageBoxW)) {
-    MessageBoxW(ce::ceGetConsoleWindow(), L"The second message.", L"W", MB_OK);
-  }*/
+  std::cout << "API::DETACH -> MessageBoxA -> Success" << std::endl;
 
-  /*if (API[0].ceAPIAttach(T("user32.dll"), T("MessageBoxA"), &HfnMessageBoxA, (void**)&pfnMessageBoxA)) {
-    MessageBoxA(ce::ceGetConsoleWindow(), "The first message.", "A", MB_OK);
+  if (!API_DETACH(API[0], user32.dll, MessageBoxW)) {
+      std::cout << "API::DETACH -> MessageBoxW -> Failure" << std::endl;
   }
 
-  if (API[1].ceAPIAttach(T("user32.dll"), T("MessageBoxW"), &HfnMessageBoxW, (void**)&pfnMessageBoxW)) {
-    MessageBoxW(ce::ceGetConsoleWindow(), L"The first message.", L"W", MB_OK);
-  }
+  std::cout << "API::DETACH -> MessageBoxW -> Success" << std::endl;
 
-  // Release
-
-  if (API[0].ceAPIDetach(T("user32.dll"), T("MessageBoxA"), (void**)&pfnMessageBoxA)) {
-    MessageBoxA(ce::ceGetConsoleWindow(), "The second message.", "A", MB_OK);
-  }
-
-  if (API[1].ceAPIDetach(T("user32.dll"), T("MessageBoxW"), (void**)&pfnMessageBoxW)) {
-    MessageBoxW(ce::ceGetConsoleWindow(), L"The second message.", L"W", MB_OK);
-  }*/
+  MessageBoxA(ce::ceGetConsoleWindow(), "The second message.", "A", MB_OK);
+  MessageBoxW(ce::ceGetConsoleWindow(), L"The second message.", L"W", MB_OK);*/
 
   // CEIniFile
   /*ce::CEIniFile ini(ce::ceGetCurrentFilePath() + _T(".ini"));
@@ -316,15 +319,15 @@ int _tmain(int argc, _TCHAR* argv[])
     _tprintf(_T("Value = [%c, %d, %.2f]\n"), Output->a, Output->b, Output->c);
   }*/
 
-  // CERegistry (not complete)
+  // CERegistry (It has not complete yet)
   /*ce::CERegistry reg(ce::HKLM, T("SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting"));
   if (!reg.ceKeyExists()) {
-    std::tcout << T("Reg -> Exist -> Failed") << std::endl;
+    std::tcout << T("Reg -> Exist -> Failed") << ce::ceLastError() << std::endl;
     return 1;
   }
 
   if (!reg.ceOpenKey()) {
-    std::tcout << T("Reg -> Open-> Failed") << std::endl;
+    std::tcout << T("Reg -> Open-> Failed") << ce::ceLastError() << std::endl;
     return 1;
   }
 
@@ -394,7 +397,7 @@ int _tmain(int argc, _TCHAR* argv[])
 //   std::tcout << _T("RegString\t" << reg.ceReadString("RegString", "") << std::endl;
 
   if (!reg.ceCloseKey()) {
-    std::tcout << T("Reg -> Close ->Failed") << std::endl;
+    std::tcout << T("Reg -> Close ->Failed") << ce::ceLastError() << std::endl;
   }*/
 
   // Data Type Information
@@ -496,11 +499,11 @@ int _tmain(int argc, _TCHAR* argv[])
   // CEFileMapping
   /*ce::CEFileMapping fm;
 
-  if (fm.ceInit(_T("F:\\SVN\\CatEngine\\Sample\\Nano.exe")) != ce::CE_OK) {
+  if (fm.ceInit(_T("C:\\Windows\\notepad.exe")) != ce::CE_OK) {
     std::tcout << _T("Init -> Failed ") << ce::ceLastError() << std::endl;
   }
 
-  if (fm.ceCreate(_T("FM-Nano")) != ce::CE_OK) {
+  if (fm.ceCreate(_T("FM-Notepad.exe")) != ce::CE_OK) {
     std::tcout << _T("Create -> Failed ") << ce::ceLastError() << std::endl;
   }
 
@@ -514,9 +517,8 @@ int _tmain(int argc, _TCHAR* argv[])
   }*/
 
   // CEPEFile
-  /*//ce::CEPEFileT<ce::pe32> pe(_T("F:\\SVN\\CatEngine\\Sample\\Nano.exe"));
-  //ce::CEPEFileT<ce::pe64> pe(_T("F:\\SVN\\CatEngine\\Sample\\VBoxUSBMon.sys"));
-  ce::CEPEFileT<ce::pe64> pe(_T("F:\\SVN\\CyberMedical-5.5\\ProSIM\\Bin\\ConfigTool.exe"));
+  /*ce::CEPEFileT<ce::pe32> pe(_T("F:\\SVN\\CatEngine\\Win32\\Release\\Test.exe"));
+  //ce::CEPEFileT<ce::pe64> pe(_T("F:\\SVN\\CatEngine\\x64\\Release\\Test.exe"));
 
   ce::CEResult result = pe.ceParse();
   if (result != ce::CE_OK) {
@@ -527,13 +529,13 @@ int _tmain(int argc, _TCHAR* argv[])
     if (result == 9) {
       s = _T(" (The curent type data was not supported)");
     }
-    std::tcout << _T("ceParse -> Failure") << s << std::endl;
+    std::tcout << _T("ceParse -> Failure") << ce::ceLastError() << s << std::endl;
     return 1;
   }
 
   void* pBase = pe.ceGetpBase();
   if (pBase == nullptr) {
-    std::tcout << _T("ceGetpBase -> Failure") << std::endl;
+    std::tcout << _T("ceGetpBase -> Failure") << ce::ceLastError() << std::endl;
     return 1;
   }
 
@@ -541,7 +543,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
   auto sections = pe.ceGetSetionHeaderList();
   if (sections.size() == 0) {
-    std::tcout << _T("ceGetSetionHeaderList -> Failure") << std::endl;
+    std::tcout << _T("ceGetSetionHeaderList -> Failure") << ce::ceLastError() << std::endl;
     return 1;
   }
 
@@ -565,7 +567,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
   auto IIDs = pe.ceGetImportDescriptorList();
   if (IIDs.size() == 0) {
-    std::tcout << _T("ceGetImportDescriptorList -> Failure") << std::endl;
+    std::tcout << _T("ceGetImportDescriptorList -> Failure") << ce::ceLastError() << std::endl;
     return 1;
   }
 
@@ -583,7 +585,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
   auto DLLs = pe.ceGetDLLInfoList();
   if (DLLs.size() == 0) {
-    std::tcout << _T("ceGetDLLList -> Failure") << std::endl;
+    std::tcout << _T("ceGetDLLList -> Failure") << ce::ceLastError() << std::endl;
     return 1;
   }
 
@@ -595,7 +597,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
   auto Functions = pe.ceGetFunctionInfoList();
   if (Functions.size() == 0) {
-    std::tcout << _T("ceGetFunctionInfoList -> Failure") << std::endl;
+    std::tcout << _T("ceGetFunctionInfoList -> Failure") << ce::ceLastError() << std::endl;
     return 1;
   }
 

@@ -1,6 +1,10 @@
 #include "CatEngine.h"
 
-#pragma warning(disable: 4661)
+#ifdef _MSC_VER
+  #pragma warning(disable: 4661) // : no suitable definition provided for explicit template instantiation request
+#endif
+
+
 
 namespace ce {
   // Private in CatEngine.cpp
@@ -8,6 +12,10 @@ namespace ce {
   const std::string  CE_TITLE_ANSI           =  "CatEngine";
   const std::wstring CE_TITLE_UNICODE        = L"CatEngine";
   const size_t MAX_SIZE = MAXBYTE;
+
+  #define ceCfgSP(N, T) new T[N], [](T* p) {\
+    delete[] p;\
+  }
 
   /* Additional defination */
 #ifndef PSAPI_VERSION
@@ -279,7 +287,7 @@ namespace ce {
     std::string s;
     s.clear();
 
-    std::shared_ptr<char> p(new char[MAX_SIZE]);
+    std::shared_ptr<char> p(ceCfgSP(MAX_SIZE, char));
     if (p == nullptr) {
       return s;
     }
@@ -317,7 +325,7 @@ namespace ce {
     std::wstring ws;
     ws.clear();
 
-    std::shared_ptr<wchar> p(new wchar[MAX_SIZE]);
+    std::shared_ptr<wchar> p(ceCfgSP(MAX_SIZE, wchar));
     if (p == nullptr) {
       return ws;
     }
@@ -474,9 +482,118 @@ namespace ce {
 
   /* --- Cat: String Formatting --- */
 
+  std::string ceapi ceGetFormatStringForNumber(std::string TypeID)
+  {
+    /* MinGW
+      i -> int
+      l -> long
+      x -> long long
+      j -> unsigned
+      m -> unsigned long
+      y -> unsigned long long
+      f -> float
+      d -> double
+      e -> long double
+    */
+
+    std::string fs = "";
+
+    if (TypeID == "i") {
+        fs = "%d";
+    }
+    else if (TypeID == "l") {
+        fs = "%ld";
+    }
+    else if (TypeID == "x") {
+        fs = "lld";
+    }
+    else if (TypeID == "j") {
+        fs = "%u";
+    }
+    else if (TypeID == "m") {
+        fs = "%lu";
+    }
+    else if (TypeID == "y") {
+        fs = "%llu";
+    }
+    else if (TypeID == "f") {
+        fs = "%f";
+    }
+    else if (TypeID == "d") {
+        fs = "%e";
+    }
+    else if (TypeID == "e") {
+        fs = "%Le";
+    }
+    else {
+        fs = "";
+    }
+
+    return fs;
+  }
+
+  template<typename T>
+  std::string ceapi ceNumberToStringA(T v)
+  {
+  #if defined(__MINGW32__)
+    std::string s = "";
+    std::string tid = std::string(typeid(v).name());
+    std::string fs = ceGetFormatStringForNumber(tid);
+
+    int z = ce::ceGetFormattedStringLengthA(fs, v);
+    if (z <= 0) {
+        return s;
+    }
+
+    std::shared_ptr<char> p(ceCfgSP(z, char));
+    memset(p.get(), 0, z*sizeof(char));
+    sprintf(p.get(), fs.c_str(), v);
+    s.assign(p.get());
+
+    return s;
+  #else // defined(_MSC_VER) - defined(__BCPLUSPLUS__)
+    return std::to_string(v);
+  #endif
+  }
+
+  template<typename T>
+  std::wstring ceapi ceNumberToStringW(T v)
+  {
+  #if defined(__MINGW32__)
+    std::wstring ws = L"";
+    std::string tid = std::string(typeid(v).name());
+
+    std::string fs = ceGetFormatStringForNumber(tid);
+
+    if (fs == "%Le") { // Does not support now
+      return ws;
+    }
+
+    std::wstring wfs = ce::cePacToPwc(fs);
+
+    int z = ce::ceGetFormattedStringLengthW(wfs, v);
+    if (z <= 0) {
+        return ws;
+    }
+
+    std::shared_ptr<wchar> p(ceCfgSP(z, wchar));
+    memset(p.get(), 0, z*sizeof(wchar));
+    _snwprintf(p.get(), z*sizeof(wchar), wfs.c_str(), v);  
+    ws.assign(p.get());
+
+    return ws;
+  #else // defined(_MSC_VER) - defined(__BCPLUSPLUS__)
+    return std::to_wstring(v);
+  #endif
+  }
+
   int ceapi ceGetFormattedLengthA(const std::string Format, va_list args)
   {
     int N = -1;
+
+    if (ceInitMiscRoutine() != CE_OK) {
+      return N;
+    }
 
     #ifdef _MSC_VER
       N = _vscprintf(Format.c_str(), args) + 1;
@@ -491,11 +608,39 @@ namespace ce {
   {
     int N = -1;
 
+    if (ceInitMiscRoutine() != CE_OK) {
+      return N;
+    }
+
     #ifdef _MSC_VER
         N = _vscwprintf(Format.c_str(), args) + 1;
     #else
         N = pfn_vscwprintf(Format.c_str(), args) + 1;
     #endif
+
+    return N;
+  }
+
+  int ceapi ceGetFormattedStringLengthA(const std::string Format, ...)
+  {
+    va_list args;
+    va_start(args, Format);
+
+    int N = ceGetFormattedLengthA(Format, args);
+
+    va_end(args);
+
+    return N;
+  }
+
+  int ceapi ceGetFormattedStringLengthW(const std::wstring Format, ...)
+  {
+    va_list args;
+    va_start(args, Format);
+
+    int N = ceGetFormattedLengthW(Format, args);
+
+    va_end(args);
 
     return N;
   }
@@ -509,7 +654,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthA(Format, args);
-    std::shared_ptr<char> p(new char[N]);
+    std::shared_ptr<char> p(ceCfgSP(N, char));
     if (p == nullptr) {
       va_end(args);
       return s;
@@ -535,7 +680,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
-    std::shared_ptr<wchar> p(new wchar[N]);
+    std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
     if (p == nullptr) {
       va_end(args);
       return ws;
@@ -559,7 +704,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthA(Format, args);
-    std::shared_ptr<char> p(new char[N]);
+    std::shared_ptr<char> p(ceCfgSP(N, char));
     if (p == nullptr) {
       va_end(args);
       return;
@@ -581,7 +726,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
-    std::shared_ptr<wchar> p(new wchar[N]);
+    std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
     if (p == nullptr) {
       va_end(args);
       return;
@@ -603,7 +748,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthA(Format, args);
-    std::shared_ptr<char> p(new char[N]);
+    std::shared_ptr<char> p(ceCfgSP(N, char));
     if (p == nullptr) {
       va_end(args);
       return 0;
@@ -625,7 +770,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthA(Format, args);
-    std::shared_ptr<char> p(new char[N]);
+    std::shared_ptr<char> p(ceCfgSP(N, char));
     if (p == nullptr) {
       va_end(args);
       return 0;
@@ -647,7 +792,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthA(Format, args);
-    std::shared_ptr<char> p(new char[N]);
+    std::shared_ptr<char> p(ceCfgSP(N, char));
     if (p == nullptr) {
       va_end(args);
       return 0;
@@ -669,7 +814,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
-    std::shared_ptr<wchar> p(new wchar[N]);
+    std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
     if (p == nullptr) {
       va_end(args);
       return 0;
@@ -691,7 +836,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
-    std::shared_ptr<wchar> p(new wchar[N]);
+    std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
     if (p == nullptr) {
       va_end(args);
       return 0;
@@ -713,7 +858,7 @@ namespace ce {
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
-    std::shared_ptr<wchar> p(new wchar[N]);
+    std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
     if (p == nullptr) {
       va_end(args);
       return 0;
@@ -797,7 +942,7 @@ namespace ce {
     std::string s;
     s.clear();
 
-    std::shared_ptr<char> p(new char[MAX_SIZE]);
+    std::shared_ptr<char> p(ceCfgSP(MAXBYTE, char));
     if (p == nullptr) {
       return s;
     }
@@ -824,7 +969,7 @@ namespace ce {
     std::wstring ws;
     ws.clear();
 
-    std::shared_ptr<wchar> p(new wchar[MAXBYTE]);
+    std::shared_ptr<wchar> p(ceCfgSP(MAXBYTE, wchar));
     if (p == nullptr) return ws;
 
     tm lt = {0};
@@ -883,7 +1028,7 @@ namespace ce {
 
     int N = (int)String.length() + 1;
 
-    std::shared_ptr<char> p(new char[N]);
+    std::shared_ptr<char> p(ceCfgSP(N, char));
     if (p == nullptr) {
       return s;
     }
@@ -904,7 +1049,7 @@ namespace ce {
 
     int N = (int)String.length() + 1;
 
-    std::shared_ptr<wchar_t> p(new wchar_t[N]);
+    std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
     if (p == nullptr) {
       ws.clear();
     }
@@ -1001,7 +1146,7 @@ namespace ce {
 
     ulLength += 1; // End of multi string.
 
-    std::shared_ptr<char> p(new char[ulLength]);
+    std::shared_ptr<char> p(ceCfgSP(ulLength, char));
     if (p == nullptr) {
       return nullptr;
     }
@@ -1028,7 +1173,7 @@ namespace ce {
 
     ulLength += 1; // End of multi string.
 
-    std::shared_ptr<wchar> p(new wchar[ulLength]);
+    std::shared_ptr<wchar> p(ceCfgSP(ulLength, wchar));
     if (p == nullptr) {
       return nullptr;
     }
@@ -1234,7 +1379,7 @@ namespace ce {
       return l;
     }
 
-    std::shared_ptr<ulong> pProcesses(new ulong[ulMaxProcessNumber]);
+    std::shared_ptr<ulong> pProcesses(ceCfgSP(ulMaxProcessNumber, ulong));
     if (pProcesses == nullptr) {
       return l;
     }
@@ -1275,7 +1420,7 @@ namespace ce {
       return l;
     }
 
-    std::shared_ptr<ulong> pProcesses(new ulong[ulMaxProcessNumber]);
+    std::shared_ptr<ulong> pProcesses(ceCfgSP(ulMaxProcessNumber, ulong));
     if (pProcesses == nullptr) {
       return l;
     }
@@ -1317,7 +1462,7 @@ namespace ce {
       return s;
     }
 
-    std::shared_ptr<char> szProcessPath(new char[MAXPATH]);
+    std::shared_ptr<char> szProcessPath(ceCfgSP(MAXPATH, char));
     ZeroMemory(szProcessPath.get(), MAXPATH);
 
     ulong ulPathLength = MAXPATH;
@@ -1347,7 +1492,7 @@ namespace ce {
       return ws;
     }
 
-    std::shared_ptr<wchar> wszProcessPath(new wchar[MAXBYTE]);
+    std::shared_ptr<wchar> wszProcessPath(ceCfgSP(MAXPATH, wchar));
     ZeroMemory(wszProcessPath.get(), 2*MAXBYTE);
 
     ulong ulPathLength = 2*MAXPATH;
@@ -1369,45 +1514,45 @@ namespace ce {
 
   HMODULE ceapi ceRemoteGetModuleHandleA(ulong ulPID, const std::string ModuleName)
   {
+    HMODULE hModule = (HMODULE)-1;
     /*TModuleEntry32A me32 = {0};
-    HMODULE hModule = nullptr;
 
     if (ceInitTlHelp32() != CE_OK) {
-    return (HMODULE)-1;
+      return (HMODULE)-1;
     }
 
-    HANDLE hSnap = fnCreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, ulPID);
+    /*HANDLE hSnap = fnCreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, ulPID);
     if (hSnap == INVALID_HANDLE_VALUE) {
-    return nullptr;
+      return nullptr;
     }
 
     me32.dwSize = sizeof(me32);
 
-    if (!fnModule32FirstA(hSnap, &me32)) {
-    CloseHandle(hSnap);
-    return nullptr;
+    if (!pfnModule32FirstA(hSnap, &me32)) {
+      CloseHandle(hSnap);
+      return nullptr;
     }
 
     std::string s2, s1 = ceLowerStringA(ModuleName);
 
     do {
-    s2.clear();
-    s2 = ceLowerStringA(me32.szModule);
-    if (s1 == s2) {
-    hModule = me32.hModule;
-    break;
-    };
-    } while (fnModule32NextA(hSnap, &me32));
+      s2.clear();
+      s2 = ceLowerStringA(me32.szModule);
+      if (s1 == s2) {
+        hModule = me32.hModule;
+        break;
+      };
+    } while (pfnModule32NextA(hSnap, &me32));
 
     CloseHandle(hSnap);
 
-    return hModule;*/
+    return hModule;
 
     if (ceInitTlHelp32() != 0) {
       return (HMODULE)-1;
     }
 
-    /*HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, ulPID);
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, ulPID);
     if (!hProcess) {
     return (HMODULE)-1;
     }
@@ -1420,7 +1565,7 @@ namespace ce {
 
     tchar ModuleName[MAXPATH];
     for (ulong i = 0; i < nModules; i++) {
-    ZeroMemory(ModuleName, sizeof(ModuleName));
+    memset((void*)&ModuleName, 0, sizeof(ModuleName));
     pfnGetModuleFileNameEx(hProcess, hModules[i], ModuleName, sizeof(ModuleName));
     ceMsg(T("%d. %s"), i, ModuleName);
     //OutputDebugString(ModuleName);
@@ -1431,46 +1576,46 @@ namespace ce {
     return (HMODULE)-1;
   }
 
-  HMODULE ceapi ceRemoteGetModuleHandleW(ulong ulPID, const std::wstring ModuleName)
+  HMODULE ceapi ceRemoteGetModuleHandleW(const ulong ulPID, const std::wstring ModuleName)
   {
-    if (ceInitTlHelp32() != CE_OK) {
+    HMODULE hModule = (HMODULE)-1;
+
+    /*if (ceInitTlHelp32() != CE_OK) {
       return (HMODULE)-1;
     }
 
-    /*TModuleEntry32W me32 = {0};
-    HMODULE hModule = nullptr;
+    bool bIs32Process = false;
 
-    if (ceInitTlHelp32() != CE_OK) {
-    return (HMODULE)-1;
+    if (ceGetProcessorArchitecture() == eProcessorArchitecture::PA_X64) { // 64-bit arch
+      if (ceIsWow64(ulPID)) { // 32-bit process
+        bIs32Process = true;
+      }
+      else { // 64-bit process
+        bIs32Process = false;
+      }
+    }
+    else { // 32-bit arch
+      // 32-bit process
+      bIs32Process = true;
     }
 
-    HANDLE hSnap = pfnCreateToolhelp32Snapshot(TH32CS_SNAPMODULE, ulPID);
-    if (hSnap == INVALID_HANDLE_VALUE) {
-    return 0;
-    }
+    #ifdef _WIN64 // 64-bit arch
+      if (bIs32Process) { // 32-bit process
+        hModule = ceRemoteGetModuleHandle32W(ulPID, ModuleName);
+      }
+      else { // 64-bit process
+        hModule = (HMODULE)-1;
+      }
+    #else // 32-bit arch
+      if (bIs32Process) { // 32-bit process
+        hModule = ceRemoteGetModuleHandle32W(ulPID, ModuleName);
+      }
+      else { // 64-bit process
+        hModule = (HMODULE)-1;
+      }
+    #endif // _WIN64*/
 
-    me32.dwSize = sizeof(me32);
-
-    if (!pfnModule32FirstW(hSnap, &me32)) {
-    CloseHandle(hSnap);
-    return 0;
-    }
-
-    std::wstring s2, s1 = ceLowerStringW(ModuleName);
-
-    do {
-    s2.clear();
-    s2 = ceLowerStringW(me32.szModule);
-    if (s1 == s2) {
-    hModule = me32.hModule;
-    break;
-    };
-    } while (pfnModule32NextW(hSnap, &me32));
-
-    CloseHandle(hSnap);
-
-    return hModule;*/
-    return (HMODULE)-1;
+    return hModule;
   }
 
   /* -------------------------------------------- File/Directory Working -------------------------------------------- */
@@ -1498,7 +1643,7 @@ namespace ce {
   std::string ceapi ceFileTypeA(const std::string FilePath)
   {
     SHFILEINFOA SHINFO = {0};
-    std::shared_ptr<char> szFileType(new char[MAXBYTE]);
+    std::shared_ptr<char> szFileType(ceCfgSP(MAXBYTE, char));
     std::string s;
     s.clear();
 
@@ -1513,7 +1658,7 @@ namespace ce {
   std::wstring ceapi ceFileTypeW(const std::wstring FilePath)
   {
     SHFILEINFOW SHINFO = {0};
-    std::shared_ptr<wchar> szFileType(new wchar[MAXBYTE]);
+    std::shared_ptr<wchar> szFileType(ceCfgSP(MAXBYTE, wchar));
     std::wstring ws;
     ws.clear();
 
@@ -1528,10 +1673,9 @@ namespace ce {
   bool ceapi ceFileExistsA(const std::string FilePath)
   {
     bool bResult = false;
-    HANDLE hFile;
     WIN32_FIND_DATAA wfd = {0};
 
-    hFile = FindFirstFileA(FilePath.c_str(), &wfd);
+    HANDLE hFile = FindFirstFileA(FilePath.c_str(), &wfd);
     if (hFile != INVALID_HANDLE_VALUE) {
       bResult = true;
       FindClose(hFile);
@@ -1543,10 +1687,9 @@ namespace ce {
   bool ceapi ceFileExistsW(const std::wstring FilePath)
   {
     bool bResult = false;
-    HANDLE hFile;
     WIN32_FIND_DATAW wfd = {0};
 
-    hFile = FindFirstFileW(FilePath.c_str(), &wfd);
+    HANDLE hFile = FindFirstFileW(FilePath.c_str(), &wfd);
     if (hFile != INVALID_HANDLE_VALUE) {
       bResult = true;
       FindClose(hFile);
@@ -1623,7 +1766,7 @@ namespace ce {
 
   std::string ceapi ceGetCurrentFilePathA()
   {
-    std::shared_ptr<char> p(new char[MAXPATH]);
+    std::shared_ptr<char> p(ceCfgSP(MAXPATH, char));
 
     ZeroMemory(p.get(), MAXPATH);
 
@@ -1638,7 +1781,7 @@ namespace ce {
 
   std::wstring ceapi ceGetCurrentFilePathW()
   {
-    std::shared_ptr<wchar> p(new wchar[MAXPATH]);
+    std::shared_ptr<wchar> p(ceCfgSP(MAXPATH, wchar));
 
     ZeroMemory(p.get(), 2*MAXPATH);
 
@@ -2115,7 +2258,7 @@ namespace ce {
       return 1;
     }
 
-    std::shared_ptr<char> p(new char[MAXBYTE]);
+    std::shared_ptr<char> p(ceCfgSP(MAXBYTE, char));
     if (p == nullptr) {
       return 2;
     }
@@ -2169,7 +2312,7 @@ namespace ce {
     std::string r;
     r.clear();
 
-    std::shared_ptr<char> h(new char[MAXBYTE]);
+    std::shared_ptr<char> h(ceCfgSP(MAXBYTE, char));
     if (h == nullptr) {
       return r;
     }
@@ -2295,7 +2438,6 @@ namespace ce {
     if ((hde.flags & HDE::F_DISP8) || (hde.flags & HDE::F_DISP16) || (hde.flags & HDE::F_DISP32)) {
       TMemoryInstruction mi = {0};
       mi.Offset   = offset;
-      //mi.Position = 3; // Windows 64 API
 
       ulong ulDispSize = 0;
       if ((hde.flags & HDE::F_DISP8) == HDE::F_DISP8) {
@@ -2314,7 +2456,7 @@ namespace ce {
         ulDispSize = 4;
       }
 
-      mi.Position = hde.len - ulDispSize;
+      mi.Position = hde.len - ulDispSize; // check again
       m_ListMemoryInstruction.push_back(mi);
     }
 
@@ -2397,7 +2539,7 @@ namespace ce {
       for (auto e: m_ListMemoryInstruction) {
         if (e.MemoryAddressType == eMemoryAddressType::MAT_32) {
           auto v = (ulongptr)pProc - (ulongptr)*pOldProc + (ulongptr)e.MAO.A32;
-          *(ulongptr*)((ulongptr)*pOldProc + e.Offset + e.Position) = (ulongptr)v;
+          *(ulongptr*)((ulongptr)*pOldProc + e.Offset + e.Position) = (ulongptr)v; // check again
         }
       }
     }
@@ -2440,7 +2582,7 @@ namespace ce {
     if (m_ListMemoryInstruction.size() > 0) {
       for (auto e: m_ListMemoryInstruction) {
         if (e.MemoryAddressType == eMemoryAddressType::MAT_32) {
-          *(ulongptr*)((ulongptr)*pOldProc + e.Offset + e.Position) = (ulongptr)e.MAO.A32;
+          *(ulongptr*)((ulongptr)*pOldProc + e.Offset + e.Position) = (ulongptr)e.MAO.A32; // check again
         }
       }
     }
@@ -2834,7 +2976,7 @@ namespace ce {
     std::list<std::string> l;
     l.clear();
 
-    std::shared_ptr<char> p(new char[ulMaxSize]);
+    std::shared_ptr<char> p(ceCfgSP(ulMaxSize, char));
     if (p == nullptr) {
       return l;
     }
@@ -2860,7 +3002,7 @@ namespace ce {
     std::list<std::string> l;
     l.clear();
 
-    std::shared_ptr<char> p(new char[ulMaxSize]);
+    std::shared_ptr<char> p(ceCfgSP(ulMaxSize, char));
     if (p == nullptr) {
       return l;
     }
@@ -2899,7 +3041,7 @@ namespace ce {
 
   float ceapi CEIniFileA::ceReadFloat(const std::string Section, const std::string Key, float Default)
   {
-    const std::string sDefault = std::to_string(Default);
+    const std::string sDefault = ceNumberToStringA(Default);
     char lpszResult[MAX_SIZE];
 
     ZeroMemory(lpszResult, sizeof(lpszResult));
@@ -2918,7 +3060,7 @@ namespace ce {
     std::string s;
     s.clear();
 
-    std::shared_ptr<char> p(new char[MAX_SIZE]);
+    std::shared_ptr<char> p(ceCfgSP(MAX_SIZE, char));
     if (p == nullptr) {
       return s;
     }
@@ -2946,9 +3088,9 @@ namespace ce {
     return s;
   }
 
-  std::shared_ptr<void> ceapi CEIniFileA::ceReadStruct(const std::string Section, const std::string Key, ulong ulSize)
+  std::shared_ptr<uchar> ceapi CEIniFileA::ceReadStruct(const std::string Section, const std::string Key, ulong ulSize)
   {
-    std::shared_ptr<void> p(malloc(ulSize));
+    std::shared_ptr<uchar> p(ceCfgSP(ulSize, uchar));
     if (p == nullptr) {
       return nullptr;
     }
@@ -2957,7 +3099,7 @@ namespace ce {
 
     this->ceValidFilePath();
 
-    if (GetPrivateProfileStructA(Section.c_str(), Key.c_str(), p.get(), ulSize, m_FilePath.c_str()) == 0) {
+    if (GetPrivateProfileStructA(Section.c_str(), Key.c_str(), (void*)p.get(), ulSize, m_FilePath.c_str()) == 0) {
       m_LastErrorCode = GetLastError();
       return nullptr;
     }
@@ -2992,7 +3134,7 @@ namespace ce {
     return this->ceReadString(m_Section, Key, Default);
   }
 
-  std::shared_ptr<void> ceapi CEIniFileA::ceReadStruct(const std::string Key, ulong ulSize)
+  std::shared_ptr<uchar> ceapi CEIniFileA::ceReadStruct(const std::string Key, ulong ulSize)
   {
     return this->ceReadStruct(m_Section, Key, ulSize);
   }
@@ -3002,7 +3144,7 @@ namespace ce {
   bool ceapi CEIniFileA::ceWriteInteger(const std::string Section, const std::string Key, int Value)
   {
     this->ceValidFilePath();
-    const std::string s = std::to_string(Value);
+    const std::string s = ceNumberToStringA(Value);
     bool result = (WritePrivateProfileStringA(Section.c_str(), Key.c_str(), s.c_str(), m_FilePath.c_str()) != 0);
     m_LastErrorCode = GetLastError();
     return result;
@@ -3020,7 +3162,7 @@ namespace ce {
   bool ceapi CEIniFileA::ceWriteFloat(const std::string Section, const std::string Key, float Value)
   {
     this->ceValidFilePath();
-    const std::string s = std::to_string(Value);
+    const std::string s = ceNumberToStringA(Value);
     bool result = (WritePrivateProfileStringA(Section.c_str(), Key.c_str(), s.c_str(), m_FilePath.c_str()) != 0);
     m_LastErrorCode = GetLastError();
     return result;
@@ -3113,7 +3255,7 @@ namespace ce {
     std::list<std::wstring> l;
     l.clear();
 
-    std::shared_ptr<wchar> p(new wchar[ulMaxSize]);
+    std::shared_ptr<wchar> p(ceCfgSP(ulMaxSize, wchar));
     if (p == nullptr) {
       return l;
     }
@@ -3139,7 +3281,7 @@ namespace ce {
     std::list<std::wstring> l;
     l.clear();
 
-    std::shared_ptr<wchar> p(new wchar[ulMaxSize]);
+    std::shared_ptr<wchar> p(ceCfgSP(ulMaxSize, wchar));
     if (p == nullptr) {
       return l;
     }
@@ -3180,7 +3322,7 @@ namespace ce {
   {
     this->ceValidFilePath();
 
-    const std::wstring sDefault = std::to_wstring(Default);
+    const std::wstring sDefault = ceNumberToStringW(Default);
     wchar lpwszResult[MAX_SIZE];
 
     ZeroMemory(lpwszResult, sizeof(lpwszResult));
@@ -3199,7 +3341,7 @@ namespace ce {
     std::wstring ws;
     ws.clear();
 
-    std::shared_ptr<wchar> p(new wchar[MAX_SIZE]);
+    std::shared_ptr<wchar> p(ceCfgSP(MAX_SIZE, wchar));
     if (p == nullptr) {
       return ws;
     }
@@ -3226,9 +3368,9 @@ namespace ce {
     return ws;
   }
 
-  std::shared_ptr<void> ceapi CEIniFileW::ceReadStruct(const std::wstring Section, const std::wstring Key, ulong ulSize)
+  std::shared_ptr<uchar> ceapi CEIniFileW::ceReadStruct(const std::wstring Section, const std::wstring Key, ulong ulSize)
   {
-    std::shared_ptr<void> p(malloc(ulSize));
+    std::shared_ptr<uchar> p(ceCfgSP(ulSize, uchar));
     if (p == nullptr) {
       return nullptr;
     }
@@ -3237,7 +3379,7 @@ namespace ce {
 
     this->ceValidFilePath();
 
-    if (GetPrivateProfileStructW(Section.c_str(), Key.c_str(), p.get(), ulSize, m_FilePath.c_str()) == 0) {
+    if (GetPrivateProfileStructW(Section.c_str(), Key.c_str(), (void*)p.get(), ulSize, m_FilePath.c_str()) == 0) {
       m_LastErrorCode = GetLastError();
       return nullptr;
     }
@@ -3272,7 +3414,7 @@ namespace ce {
     return this->ceReadString(m_Section, Key, Default);
   }
 
-  std::shared_ptr<void> ceapi CEIniFileW::ceReadStruct(const std::wstring Key, ulong ulSize)
+  std::shared_ptr<uchar> ceapi CEIniFileW::ceReadStruct(const std::wstring Key, ulong ulSize)
   {
     return this->ceReadStruct(m_Section, Key, ulSize);
   }
@@ -3282,7 +3424,7 @@ namespace ce {
   bool ceapi CEIniFileW::ceWriteInteger(const std::wstring Section, const std::wstring Key, int Value)
   {
     this->ceValidFilePath();
-    const std::wstring ws = std::to_wstring(Value);
+    const std::wstring ws = ceNumberToStringW(Value);
     bool result = (WritePrivateProfileStringW(Section.c_str(), Key.c_str(), ws.c_str(), m_FilePath.c_str()) != 0);
     m_LastErrorCode = GetLastError();
     return result;
@@ -3298,7 +3440,7 @@ namespace ce {
   bool ceapi CEIniFileW::ceWriteFloat(const std::wstring Section, const std::wstring Key, float Value)
   {
     this->ceValidFilePath();
-    const std::wstring ws = std::to_wstring(Value);
+    const std::wstring ws = ceNumberToStringW(Value);
     bool result = (WritePrivateProfileStringW(Section.c_str(), Key.c_str(), ws.c_str(), m_FilePath.c_str()) != 0);
     m_LastErrorCode = GetLastError();
     return result;
@@ -3818,7 +3960,7 @@ namespace ce {
 
     ulReturn += sizeof(char);
 
-    std::shared_ptr<char> p(new char[ulReturn]);
+    std::shared_ptr<char> p(ceCfgSP(ulReturn, char));
     if (p == nullptr) {
       return Default;
     }
@@ -3850,7 +3992,7 @@ namespace ce {
 
     ulReturn += sizeof(char);
 
-    std::shared_ptr<char> p(new char[ulReturn]);
+    std::shared_ptr<char> p(ceCfgSP(ulReturn, char));
     if (p == nullptr) {
       return Default;
     }
@@ -3882,7 +4024,7 @@ namespace ce {
 
     ulReturn += sizeof(char);
 
-    std::shared_ptr<char> p(new char[ulReturn]);
+    std::shared_ptr<char> p(ceCfgSP(ulReturn, char));
     if (p == nullptr) {
       return Default;
     }
@@ -3899,9 +4041,9 @@ namespace ce {
     return s;
   }
 
-  std::shared_ptr<void> ceapi CERegistryA::ceReadBinary(const std::string ValueName, const void * pDefault)
+  std::shared_ptr<uchar> ceapi CERegistryA::ceReadBinary(const std::string ValueName, const void * pDefault)
   {
-    std::shared_ptr<void> pDef((void*)pDefault);
+    std::shared_ptr<uchar> pDef((uchar*)pDefault);
 
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -3918,14 +4060,14 @@ namespace ce {
 
     ulReturn += 1;
 
-    std::shared_ptr<void> p(malloc(ulReturn));
+    std::shared_ptr<uchar> p(ceCfgSP(ulReturn, uchar));
     if (p == nullptr) {
       return pDef;
     }
 
-    ZeroMemory(p.get(), ulReturn);
+    ZeroMemory((void*)p.get(), ulReturn);
 
-    m_LastErrorCode = RegQueryValueExA(m_HKSubKey, ValueName.c_str(), NULL, &ulType, (uchar*)p.get(), &ulReturn);
+    m_LastErrorCode = RegQueryValueExA(m_HKSubKey, ValueName.c_str(), NULL, &ulType, p.get(), &ulReturn);
     if (m_LastErrorCode != ERROR_SUCCESS) {
       return pDef;
     }
@@ -4346,7 +4488,7 @@ namespace ce {
 
     ulReturn += sizeof(wchar);
 
-    std::shared_ptr<wchar> p(new wchar[ulReturn / sizeof(wchar)]);
+    std::shared_ptr<wchar> p(ceCfgSP(ulReturn / sizeof(wchar), wchar));
     if (p == nullptr) {
       return Default;
     }
@@ -4378,7 +4520,7 @@ namespace ce {
 
     ulReturn += sizeof(wchar);
 
-    std::shared_ptr<wchar> p(new wchar[ulReturn / sizeof(wchar)]);
+    std::shared_ptr<wchar> p(ceCfgSP(ulReturn / sizeof(wchar), wchar));
     if (p == nullptr) {
       return Default;
     }
@@ -4410,7 +4552,7 @@ namespace ce {
 
     ulReturn += sizeof(wchar);
 
-    std::shared_ptr<wchar> p(new wchar[ulReturn / 2]);
+    std::shared_ptr<wchar> p(ceCfgSP(ulReturn / 2, wchar));
     if (p == nullptr) {
       return Default;
     }
@@ -4427,9 +4569,9 @@ namespace ce {
     return ws;
   }
 
-  std::shared_ptr<void> ceapi CERegistryW::ceReadBinary(const std::wstring ValueName, const void * pDefault)
+  std::shared_ptr<uchar> ceapi CERegistryW::ceReadBinary(const std::wstring ValueName, const void * pDefault)
   {
-    std::shared_ptr<void> pDef((void*)pDefault);
+    std::shared_ptr<uchar> pDef((uchar*)pDefault);
 
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4446,7 +4588,7 @@ namespace ce {
 
     ulReturn += 1;
 
-    std::shared_ptr<void> p(malloc(ulReturn));
+    std::shared_ptr<uchar> p(ceCfgSP(ulReturn, uchar));
     if (p == nullptr) {
       return pDef;
     }
@@ -4903,7 +5045,7 @@ namespace ce {
     s.clear();
     ulong nSize = MAX_SIZE;
 
-    std::shared_ptr<char> p(new char[MAX_SIZE]);
+    std::shared_ptr<char> p(ceCfgSP(MAX_SIZE, char));
     ZeroMemory(p.get(), MAX_SIZE);
 
     BOOL result = GetServiceKeyNameA(m_SCMHandle, AnotherServiceDisplayName.c_str(), p.get(), &nSize);
@@ -4930,7 +5072,7 @@ namespace ce {
     s.clear();
     ulong nSize = MAX_SIZE;
 
-    std::shared_ptr<char> p(new char[MAX_SIZE]);
+    std::shared_ptr<char> p(ceCfgSP(MAX_SIZE, char));
     ZeroMemory(p.get(), MAX_SIZE);
 
     BOOL result = GetServiceDisplayNameA(m_SCMHandle, AnotherServiceName.c_str(), p.get(), &nSize);
@@ -5057,7 +5199,7 @@ namespace ce {
     ws.clear();
     ulong nSize = 2*MAX_SIZE;
 
-    std::shared_ptr<wchar> p(new wchar[MAX_SIZE]);
+    std::shared_ptr<wchar> p(ceCfgSP(MAX_SIZE, wchar));
     ZeroMemory(p.get(), 2*MAX_SIZE);
 
     BOOL result = GetServiceKeyNameW(m_SCMHandle, AnotherServiceDisplayName.c_str(), p.get(), &nSize);
@@ -5084,7 +5226,7 @@ namespace ce {
     ws.clear();
     ulong nSize = 2*MAX_SIZE;
 
-    std::shared_ptr<wchar> p(new wchar[MAX_SIZE]);
+    std::shared_ptr<wchar> p(ceCfgSP(MAX_SIZE, wchar));
     ZeroMemory(p.get(), 2*MAX_SIZE);
 
     BOOL result = GetServiceDisplayNameW(m_SCMHandle, AnotherServiceName.c_str(), p.get(), &nSize);

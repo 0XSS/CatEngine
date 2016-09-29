@@ -21,7 +21,7 @@
 **Note:</u> Firt of all, compile CatEngine library**
 
  **General Env**
->%CatEngine% = < path\_to\_CatEngine_folder > // <i>that contains CatEngine .h/.cpp</i>
+>%CatEngine% = < path\_to\_CatEngine-master_folder > // <i>that contains CatEngine folder</i>
 
 - **for MSVC <u>(Cfg IDE)</u>**
 
@@ -48,7 +48,7 @@ $(CatEngine)\$(Platform)\$(Configuration)
 \#include "CatEngine.h"
 
 >**Cmd**
->Eg: G++ your\_program.cpp --std=c++11 -lCatEngine -lws2_32 -o your\_program.exe
+>Eg: G++ your\_program.cpp -o your\_program.exe --std=c++11 -lCatEngine -lws2_32
 
 - **for C++ Builder<u></u>**
 
