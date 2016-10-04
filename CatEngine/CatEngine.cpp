@@ -2412,89 +2412,129 @@ namespace ce {
 
   bool ceapi CEDynHookSupport::ceHandleMemoryInstruction(const HDE::tagHDE& hde, const ulong offset)
   {
-    bool result = true;
+    ulong ulPosDisp = 0;
+    TMemoryInstruction mi = {0};
+    bool result = false, bFoundRelative = false;;
 
-    /* MessageBoxA
-    00000000772512B8 | 48 83 EC 38                    | sub rsp,38                                                       |
-    00000000772512BC | 45 33 DB                       | xor r11d,r11d                                                    |
-    00000000772512BF | 44 39 1D 76 0E 02 00           | cmp dword ptr ds:[7727213C],r11d                                 |
-    00000000772512C6 | 74 2E                          | je user32.772512F6                                               |
-    00000000772512C8 | 65 48 8B 04 25 30 00 00 00     | mov rax,qword ptr gs:[30]                                        |
-    00000000772512D1 | 4C 8B 50 48                    | mov r10,qword ptr ds:[rax+48]                                    |
-    00000000772512D5 | 33 C0                          | xor eax,eax                                                      |
-    */
+    // http://wiki.osdev.org/X86-64_Instruction_Encoding
 
-    // http://staff.ustc.edu.cn/~xlanchen/cailiao/x86%20Assembly%20Programming.htm (find: Operand Addressing)
-    
-    /* Memory Instruction
-      This  for memory instructions like cmp dword ptr ds:[xxxxxxxx],r11d, mov dword ptr ds:[xxxxxxxx],r11d, ...
-    */
     #ifdef _WIN64
       namespace HDE = HDE64;
     #else
       namespace HDE = HDE32;
     #endif // _WIN64
 
-    if ((hde.flags & HDE::F_DISP8) || (hde.flags & HDE::F_DISP16) || (hde.flags & HDE::F_DISP32)) {
-      TMemoryInstruction mi = {0};
-      mi.Offset   = offset;
+    /*if (ceIsFlagOn(hde.flags, HDE::F_MODRM)) {  // ModR/M exists
+      // ModR/M
+    }
+    else if (ceIsFlagOn(hde.flags, HDE::F_SIB)) {   // SIB exists
+      // SIB
+    }*/
 
-      ulong ulDispSize = 0;
-      if ((hde.flags & HDE::F_DISP8) == HDE::F_DISP8) {
-        mi.MemoryAddressType = eMemoryAddressType::MAT_8;
-        mi.MAO.A8 = hde.disp.disp8;
-        ulDispSize = 1;
+    // Now, only ModR/M.
+    if (!ceIsFlagOn(hde.flags, HDE::F_MODRM)) {
+      return result;
+    }
+
+    if (hde.modrm_mod == 3) { // [R/M]
+      return result;
+    }
+
+    switch (hde.modrm_mod) {
+    case 0: // MOD = b00
+      if ((hde.modrm_rm >= 0 && hde.modrm_rm <= 3) || // {AX, BX, CX, DX}
+        (hde.modrm_rm >= 6 && hde.modrm_rm <= 11)     // {SI, DI, R8, R9, R10, R11}
+      ) { // [R/M]
+        // ...
       }
-      else if ((hde.flags & HDE::F_DISP16) == HDE::F_DISP16) {
-        mi.MemoryAddressType = eMemoryAddressType::MAT_16;
-        mi.MAO.A16 = hde.disp.disp16;
-        ulDispSize = 2;
-      }
-      else if ((hde.flags & HDE::F_DISP32) == HDE::F_DISP32) {
-        mi.MemoryAddressType = eMemoryAddressType::MAT_32;
+      if (hde.modrm_rm == 5 || hde.modrm_rm == 13) {  // [RIP/EIP + D32] {BP, R13} *
+        #ifdef _WIN64
+        /*ulPosDisp += 1;   // The first opcode. Always exists a byte for opcode of each instruction.
+        if (ceIsFlagOn(hde.flags, HDE::F_PREFIX_SEG)) { // *Note: In 64-bit the CS, SS, DS and ES segment overrides are ignored. 
+          / * Prefix group 2 (take 1 byte)
+            0x2E: CS segment override
+            0x36: SS segment override
+            0x3E: DS segment override
+            0x26: ES segment override
+            0x64: FS segment override
+            0x65: GS segment override
+            0x2E: Branch not taken
+            0x3E: Branch taken
+          * /
+          ulPosDisp += 1; // If it's being used the segment.
+        }
+        if (ceIsFlagOn(hde.flags, HDE::F_MODRM)) {
+          ulPosDisp += 1; // The second opcode.
+        }
+        { // Others
+          // ...
+        }
+        */
+
+        auto ulImmFlags = 0;
+        #ifdef _WIN64
+          ulImmFlags = (HDE::C_IMM8 | HDE::F_IMM16 | HDE::F_IMM32 | HDE::F_IMM64);
+        #else
+          ulImmFlags = (HDE::C_IMM8 | HDE::F_IMM16 | HDE::F_IMM32);
+        #endif
+
+        ulPosDisp = hde.len - ((hde.flags & ulImmFlags) >> 2) - 4;
+
+        mi.Position = ulPosDisp;
         mi.MAO.A32 = hde.disp.disp32;
-        ulDispSize = 4;
+        mi.MemoryAddressType = eMemoryAddressType::MAT_32; // [RIP/EIP1,2 + disp32]
+        bFoundRelative = true;
+        #endif
       }
+      if (hde.modrm_rm == 4 || hde.modrm_rm == 12) {  // [SIB] {SP, R12}
+        // ...
+      }
+      break;
+    case 1: // MOD = b01
+      if ((hde.modrm_rm >= 0 && hde.modrm_rm <= 3)||  // {AX, BX, CX, DX}
+        (hde.modrm_rm >= 5 && hde.modrm_rm <= 11) ||  // {BP, SI, DI, R8, R9, R10, R11}
+        (hde.modrm_rm >= 13 && hde.modrm_rm <= 15)    // {R13, R14, R15}
+        ) { // [R/M + D32]
+          // ...
+      }
+      if (hde.modrm_rm == 4 || hde.modrm_rm == 12) {  // [SIB + D32] // {SP, R12}
+        // ...
+      }
+      break;
+    case 2: // MOD = b10
+      if ((hde.modrm_rm >= 0 && hde.modrm_rm <= 3)||  // {AX, BX, CX, DX}
+        (hde.modrm_rm >= 5 && hde.modrm_rm <= 11) ||  // {BP, SI, DI, R8, R9, R10, R11}
+        (hde.modrm_rm >= 13 && hde.modrm_rm <= 15)    // {R13, R14, R15}
+      ) { // [R/M + D8]
+        // ...
+      }
+      if (hde.modrm_rm == 4 || hde.modrm_rm == 12) {  // [SIB + D8] // {SP, R12}
+        // ...
+      }
+      break;
+    default: // MOD = b01[3] (Ignored)
+      // [R/M]
+      break;
+    }
 
-      mi.Position = hde.len - ulDispSize; // check again
+    if (bFoundRelative) {
+      mi.Offset = offset;
       m_ListMemoryInstruction.push_back(mi);
     }
+
+    result = true;
 
     return result;
   }
 
   bool ceapi CEDynHookSupport::ceStartDetour(void* pProc, void* pHookProc, void** pOldProc)
   {
-    /* x86
-    EIP + 0 | FF 25 ?? ?? ?? ??       | JMP DWORD PTR DS:[XXXXXXXX] ; Jump to XXXXXXXX
+    /* // x86
+      EIP + 0 | FF 25 ?? ?? ?? ??       | JMP DWORD PTR DS:[XXXXXXXX] ; Jump to XXXXXXXX
 
-    // x64
-    RIP + 0 | FF 25 ?? ??? ?? ??      | JMP QWORD PTR DS:[RIP+6] ; Jump to [RIP + 6]
-    RIP + 6 | ?? ?? ?? ?? ?? ?? ?? ?? | XXXXXXXXXXXXXXXX
-    */
-
-    /* MessageBoxA
-    --- x64 ---
-    00000000772512B8 | 48 83 EC 38                    | sub rsp,38                                                       |
-    00000000772512BC | 45 33 DB                       | xor r11d,r11d                                                    |
-    00000000772512BF | 44 39 1D 76 0E 02 00           | cmp dword ptr ds:[7727213C],r11d                                 |
-    00000000772512C6 | 74 2E                          | je user32.772512F6                                               |
-    00000000772512C8 | 65 48 8B 04 25 30 00 00 00     | mov rax,qword ptr gs:[30]                                        |
-    00000000772512D1 | 4C 8B 50 48                    | mov r10,qword ptr ds:[rax+48]                                    |
-    00000000772512D5 | 33 C0                          | xor eax,eax                                                      |
-
-    --- x86 ---
-    750AFD1E 8B FF                mov         edi,edi  
-    750AFD20 55                   push        ebp  
-    750AFD21 8B EC                mov         ebp,esp  
-    750AFD23 6A 00                push        0  
-    750AFD25 FF 75 14             push        dword ptr [ebp+14h]  
-    750AFD28 FF 75 10             push        dword ptr [ebp+10h]  
-    750AFD2B FF 75 0C             push        dword ptr [ebp+0Ch]  
-    750AFD2E FF 75 08             push        dword ptr [ebp+8]  
-    750AFD31 E8 A0 FF FF FF       call        750AFCD6  
-    750AFD36 5D                   pop         ebp  
-    750AFD37 C2 10 00             ret         10h  
+      // x64
+      RIP + 0 | FF 25 ?? ??? ?? ??      | JMP QWORD PTR DS:[RIP+6] ; Jump to [RIP + 6]
+      RIP + 6 | ?? ?? ?? ?? ?? ?? ?? ?? | XXXXXXXXXXXXXXXX
     */
 
     TRedirect O2N = {0}, T2O = {0};
@@ -2537,10 +2577,10 @@ namespace ce {
     // fix memory instruction
     if (m_ListMemoryInstruction.size() > 0) {
       for (auto e: m_ListMemoryInstruction) {
-        if (e.MemoryAddressType == eMemoryAddressType::MAT_32) {
+        //if (e.MemoryAddressType == eMemoryAddressType::MAT_32) {
           auto v = (ulongptr)pProc - (ulongptr)*pOldProc + (ulongptr)e.MAO.A32;
           *(ulongptr*)((ulongptr)*pOldProc + e.Offset + e.Position) = (ulongptr)v; // check again
-        }
+        //}
       }
     }
 
@@ -2581,9 +2621,9 @@ namespace ce {
     // fix memory instruction
     if (m_ListMemoryInstruction.size() > 0) {
       for (auto e: m_ListMemoryInstruction) {
-        if (e.MemoryAddressType == eMemoryAddressType::MAT_32) {
+        //if (e.MemoryAddressType == eMemoryAddressType::MAT_32) {
           *(ulongptr*)((ulongptr)*pOldProc + e.Offset + e.Position) = (ulongptr)e.MAO.A32; // check again
-        }
+        //}
       }
     }
 

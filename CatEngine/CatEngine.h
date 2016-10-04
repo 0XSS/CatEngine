@@ -196,7 +196,7 @@ namespace HDE32 {
       uint32_t disp32;
     } disp;
     uint32_t flags;
-  } hde32s;
+  } hde32s, tagHDE;
 }
 
 namespace HDE64 {
@@ -310,7 +310,7 @@ namespace HDE64 {
       uint32_t disp32;
     } disp;
     uint32_t flags;
-  } hde64s;
+  } hde64s, tagHDE;
 }
 
 #ifdef __cplusplus
