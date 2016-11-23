@@ -626,6 +626,10 @@ namespace ce {
     va_list args;
     va_start(args, Format);
 
+    char * s = const_cast<char*>(Format.c_str());
+
+    va_start(args, s);
+
     int N = ceGetFormattedLengthA(Format, args);
 
     va_end(args);
@@ -637,6 +641,10 @@ namespace ce {
   {
     va_list args;
     va_start(args, Format);
+
+    wchar * s = const_cast<wchar*>(Format.c_str());
+
+    va_start(args, s);
 
     int N = ceGetFormattedLengthW(Format, args);
 
@@ -662,7 +670,7 @@ namespace ce {
 
     ZeroMemory(p.get(), N);
 
-    wvsprintfA(p.get(), Format.c_str(), args);
+    vsnprintf(p.get(), N, Format.c_str(), args);
 
     va_end(args);
 
@@ -688,7 +696,7 @@ namespace ce {
 
     ZeroMemory(p.get(), 2*N);
 
-    wvsprintfW(p.get(), Format.c_str(), args);
+    vswprintf(p.get(), Format.c_str(), args);
 
     va_end(args);
 
@@ -712,7 +720,8 @@ namespace ce {
 
     ZeroMemory(p.get(), N);
 
-    wvsprintfA(p.get(), Format.c_str(), args);
+    //vsnprintf(p.get(), Format.c_str(), args);
+    vsnprintf(p.get(), N, Format.c_str(), args);
 
     va_end(args);
 
@@ -734,7 +743,8 @@ namespace ce {
 
     ZeroMemory(p.get(), 2*N);
 
-    wvsprintfW(p.get(), Format.c_str(), args);
+    //vswprintf(p.get(), Format.c_str(), args);
+    vswprintf(p.get(), N, Format.c_str(), args);
 
     va_end(args);
 
@@ -756,7 +766,7 @@ namespace ce {
 
     ZeroMemory(p.get(), N);
 
-    wvsprintfA(p.get(), Format.c_str(), args);
+    vsnprintf(p.get(), N, Format.c_str(), args);
 
     va_end(args);
 
@@ -778,7 +788,7 @@ namespace ce {
 
     ZeroMemory(p.get(), N);
 
-    wvsprintfA(p.get(), Format.c_str(), args);
+    vsnprintf(p.get(), N, Format.c_str(), args);
 
     va_end(args);
 
@@ -800,7 +810,7 @@ namespace ce {
 
     ZeroMemory(p.get(), N);
 
-    wvsprintfA(p.get(), Format.c_str(), args);
+    vsnprintf(p.get(), N, Format.c_str(), args);
 
     va_end(args);
 
@@ -822,7 +832,7 @@ namespace ce {
 
     ZeroMemory(p.get(), 2*N);
 
-    wvsprintfW(p.get(), Format.c_str(), args);
+    vswprintf(p.get(), Format.c_str(), args);
 
     va_end(args);
 
@@ -844,7 +854,7 @@ namespace ce {
 
     ZeroMemory(p.get(), 2*N);
 
-    wvsprintfW(p.get(), Format.c_str(), args);
+    vswprintf(p.get(), Format.c_str(), args);
 
     va_end(args);
 
@@ -866,7 +876,7 @@ namespace ce {
 
     ZeroMemory(p.get(), 2*N);
 
-    wvsprintfW(p.get(), Format.c_str(), args);
+    vswprintf(p.get(), Format.c_str(), args);
 
     va_end(args);
 
