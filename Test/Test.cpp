@@ -1,10 +1,8 @@
 // Test.cpp : Defines the entry point for the console application.
 //
 
-//#include "stdafx.h"
-
 /* MinGW build EXE with static library
-G++ Test.cpp -o Test.exe --std=c++11 -lCatEngine -lws2_32 && Test.exe
+G++ Test.cpp --std=c++11 -lCatEngine -lws2_32 -o Test.exe && Test.exe
 */
 
 /*
@@ -12,15 +10,15 @@ G++ Test.cpp -o Test.exe --std=c++11 -lCatEngine -lws2_32 && Test.exe
   #undef _UNICODE
 #endif*/
 
-
 #include <Windows.h>
 #include <tchar.h>
-#include <iostream>
+#include <conio.h>
+#include <ctime>
 #include <limits>
 #include <memory>
 #include <cstdio>
 #include <limits>
-#include <conio.h>
+#include <iostream>
 
 // Remove min & max macros
 #ifdef min
@@ -107,7 +105,7 @@ int _tmain(int argc, _TCHAR* argv[])
   std::cout << std::endl;
 
   // Misc
-  /*ce::ceBox(ce::ceGetConsoleWindow(), _T("I'm %s. I'm %d years old!"), _T("Vic P"), 24);
+  /*ce::ceBox(ce::ceGetConsoleWindow(), _T("I'm %s. I'm %d years old!"), _T("Vic P"), 25);
   ce::ceMsg(_T("I'm %s. I'm %d years old!"), _T("Vic P"), 25);
 
   std::tcout << ce::ceFormat(_T("I'm %s. I'm %d years old! (A)"), _T("Vic P"), 25) << std::endl;
@@ -131,8 +129,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
   std::tcout << ce::ceTimeDateToString(time(NULL)) << std::endl;
 
-  std::cout  << ce::cePwcToPac(L"THIS IS A WIDE STRING") << std::endl;
-  std::wcout << ce::cePacToPwc("THIS IS AN ANSI STRING") << std::endl;
+  std::cout  << ce::ceToStringA(L"THIS IS A WIDE STRING") << std::endl;
+  std::wcout << ce::ceToStringW("THIS IS AN ANSI STRING") << std::endl;
 
   std::tstring envValue = ce::ceGetEnviroment(_T("PATH"));
   auto env = ce::ceSplitString(envValue, _T(";"));

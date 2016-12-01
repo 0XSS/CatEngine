@@ -49,14 +49,10 @@
 
 #include <Windows.h>
 #include <TlHelp32.h>
+#include <list>
 #include <string>
 #include <vector>
-#include <list>
-#include <ctime>
 #include <memory>
-#include <algorithm>
-#include <cstdio>
-
 
 
 /* CatEngine's configuration */
@@ -1165,8 +1161,8 @@ namespace ce {
   std::wstring ceapi ceLowerStringW(const std::wstring String);
   std::string ceapi ceUpperStringA(const std::string String);
   std::wstring ceapi ceUpperStringW(const std::wstring String);
-  std::string ceapi cePwcToPac(const std::wstring String);
-  std::wstring ceapi cePacToPwc(const std::string String);
+  std::string ceapi ceToStringA(const std::wstring String);
+  std::wstring ceapi ceToStringW(const std::string String);
   std::list<std::string> ceapi ceSplitStringA(const std::string String, const std::string Seperate);
   std::list<std::wstring> ceapi ceSplitStringW(const std::wstring lpcwszString, const std::wstring Seperate);
   std::list<std::string> ceapi ceMultiStringToListA(const char * lpcszMultiString);

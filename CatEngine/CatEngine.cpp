@@ -1,4 +1,6 @@
 #include "CatEngine.h"
+#include <ctime>
+#include <algorithm>
 
 #ifdef _MSC_VER
   #pragma warning(disable: 4661) // : no suitable definition provided for explicit template instantiation request
@@ -9,8 +11,8 @@
 namespace ce {
   // Private in CatEngine.cpp
   /* The common constants */
-  const std::string  CE_TITLE_ANSI           =  "CatEngine";
-  const std::wstring CE_TITLE_UNICODE        = L"CatEngine";
+  const std::string  CE_TITLE_ANSI    =  "CatEngine";
+  const std::wstring CE_TITLE_UNICODE = L"CatEngine";
   const size_t MAX_SIZE = MAXBYTE;
 
   #define ceCfgSP(N, T) new T[N], [](T* p) {\
@@ -192,11 +194,13 @@ namespace ce {
 
   typedef int (__cdecl *Pfn_vscprintf)(const char * format, va_list argptr);
   typedef int (__cdecl *Pfn_vscwprintf)(const wchar_t *format, va_list argptr);
+  typedef int (__cdecl *Pfn_vswprintf)(wchar_t *ws, size_t len, const wchar_t *format, va_list arg);
   typedef BOOL (WINAPI *PfnCheckTokenMembership)(HANDLE TokenHandle, PSID SidToCheck, PBOOL IsMember);
   typedef LONG (WINAPI *PfnRegQueryReflectionKey)(HKEY hBase, BOOL *bIsReflectionDisabled);
   typedef LONG (WINAPI *PfnRegEnableReflectionKey)(HKEY hBase);
   typedef LONG (WINAPI *PfnRegDisableReflectionKey)(HKEY hBase);
 
+  Pfn_vswprintf pfn_vswprintf = nullptr;
   Pfn_vscprintf pfn_vscprintf   = nullptr;
   Pfn_vscwprintf pfn_vscwprintf = nullptr;
   PfnCheckTokenMembership pfnCheckTokenMembership = nullptr;
@@ -210,46 +214,39 @@ namespace ce {
       return CE_OK;
     }
 
-    pfn_vscprintf = (Pfn_vscprintf)CELibrary::ceGetRoutineAddressFast(TEXT("msvcrt.dll"), TEXT("_vscprintf"));
-    if (pfn_vscprintf == nullptr) {
+    API_GETPROC(msvcrt.dll, _vscwprintf);
+    if (pfn_vscwprintf == nullptr) {
       return 1;
     }
 
-    pfn_vscwprintf = (Pfn_vscwprintf)CELibrary::ceGetRoutineAddressFast(TEXT("msvcrt.dll"), TEXT("_vscwprintf"));
-    if (pfn_vscwprintf == nullptr) {
+    API_GETPROC(msvcrt.dll, _vscprintf);
+    if (pfn_vscprintf == nullptr) {
       return 2;
     }
 
-    pfnCheckTokenMembership = (PfnCheckTokenMembership)CELibrary::ceGetRoutineAddressFast(
-      T("advapi32.dll"),
-      T("CheckTokenMembership")
-    );
-    if (pfnCheckTokenMembership == nullptr) {
+    API_GETPROC(msvcrt.dll, _vscwprintf);
+    if (pfn_vscwprintf == nullptr) {
       return 3;
     }
 
-    pfnRegQueryReflectionKey = (PfnRegQueryReflectionKey)CELibrary::ceGetRoutineAddressFast(
-      T("advapi32.dll"),
-      T("RegQueryReflectionKey")
-    );
-    if (pfnRegQueryReflectionKey == nullptr) {
+    API_GETPROC(advapi32.dll, CheckTokenMembership);
+    if (pfnCheckTokenMembership == nullptr) {
       return 4;
     }
 
-    pfnRegEnableReflectionKey = (PfnRegEnableReflectionKey)CELibrary::ceGetRoutineAddressFast(
-      T("advapi32.dll"),
-      T("RegEnableReflectionKey")
-    );
-    if (pfnRegEnableReflectionKey == nullptr) {
+    API_GETPROC(advapi32.dll, RegQueryReflectionKey);
+    if (pfnRegQueryReflectionKey == nullptr) {
       return 5;
     }
 
-    pfnRegDisableReflectionKey = (PfnRegDisableReflectionKey)CELibrary::ceGetRoutineAddressFast(
-      T("advapi32.dll"),
-      T("RegDisableReflectionKey")
-    );
-    if (pfnRegDisableReflectionKey == nullptr) {
+    API_GETPROC(advapi32.dll, RegEnableReflectionKey);
+    if (pfnRegEnableReflectionKey == nullptr) {
       return 6;
+    }
+
+    API_GETPROC(advapi32.dll, RegDisableReflectionKey);
+    if (pfnRegDisableReflectionKey == nullptr) {
+      return 7;
     }
 
     g_HasMiscRoutine = true;
@@ -569,7 +566,7 @@ namespace ce {
       return ws;
     }
 
-    std::wstring wfs = ce::cePacToPwc(fs);
+    std::wstring wfs = ce::ceToStringW(fs);
 
     int z = ce::ceGetFormattedStringLengthW(wfs, v);
     if (z <= 0) {
@@ -613,9 +610,9 @@ namespace ce {
     }
 
     #ifdef _MSC_VER
-        N = _vscwprintf(Format.c_str(), args) + 1;
+      N = _vscwprintf(Format.c_str(), args) + 1;
     #else
-        N = pfn_vscwprintf(Format.c_str(), args) + 1;
+      N = pfn_vscwprintf(Format.c_str(), args) + 1;
     #endif
 
     return N;
@@ -626,9 +623,7 @@ namespace ce {
     va_list args;
     va_start(args, Format);
 
-    char * s = const_cast<char*>(Format.c_str());
-
-    va_start(args, s);
+    va_start(args, Format);
 
     int N = ceGetFormattedLengthA(Format, args);
 
@@ -642,9 +637,7 @@ namespace ce {
     va_list args;
     va_start(args, Format);
 
-    wchar * s = const_cast<wchar*>(Format.c_str());
-
-    va_start(args, s);
+    va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
 
@@ -663,7 +656,7 @@ namespace ce {
 
     int N = ceGetFormattedLengthA(Format, args);
     std::shared_ptr<char> p(ceCfgSP(N, char));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return s;
     }
@@ -684,19 +677,27 @@ namespace ce {
     std::wstring ws;
     ws.clear();
 
+    if (ceInitMiscRoutine() != CE_OK) {
+      return ws;
+    }
+
     va_list args;
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
     std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return ws;
     }
 
     ZeroMemory(p.get(), 2*N);
 
-    vswprintf(p.get(), Format.c_str(), args);
+    #ifdef _MSC_VER
+      vswprintf(p.get(), Format.c_str(), args);
+    #else
+      pfn_vswprintf(p.get(), N, Format.c_str(), args);
+    #endif
 
     va_end(args);
 
@@ -713,7 +714,7 @@ namespace ce {
 
     int N = ceGetFormattedLengthA(Format, args);
     std::shared_ptr<char> p(ceCfgSP(N, char));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return;
     }
@@ -730,13 +731,17 @@ namespace ce {
 
   void ceapi ceMsgW(const std::wstring Format, ...)
   {
+    if (ceInitMiscRoutine() != CE_OK) {
+      return;
+    }
+
     va_list args;
 
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
     std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return;
     }
@@ -744,7 +749,11 @@ namespace ce {
     ZeroMemory(p.get(), 2*N);
 
     //vswprintf(p.get(), Format.c_str(), args);
-    vswprintf(p.get(), N, Format.c_str(), args);
+    #ifdef _MSC_VER
+      vswprintf(p.get(), N, Format.c_str(), args);
+    #else
+      pfn_vswprintf(p.get(), N, Format.c_str(), args);
+    #endif
 
     va_end(args);
 
@@ -759,7 +768,7 @@ namespace ce {
 
     int N = ceGetFormattedLengthA(Format, args);
     std::shared_ptr<char> p(ceCfgSP(N, char));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return 0;
     }
@@ -781,7 +790,7 @@ namespace ce {
 
     int N = ceGetFormattedLengthA(Format, args);
     std::shared_ptr<char> p(ceCfgSP(N, char));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return 0;
     }
@@ -803,7 +812,7 @@ namespace ce {
 
     int N = ceGetFormattedLengthA(Format, args);
     std::shared_ptr<char> p(ceCfgSP(N, char));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return 0;
     }
@@ -819,20 +828,28 @@ namespace ce {
 
   int ceapi ceBoxW(const std::wstring Format, ...)
   {
+    if (ceInitMiscRoutine() != CE_OK) {
+      return 0;
+    }
+
     va_list args;
 
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
     std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return 0;
     }
 
     ZeroMemory(p.get(), 2*N);
 
-    vswprintf(p.get(), Format.c_str(), args);
+    #ifdef _MSC_VER
+      vswprintf(p.get(), Format.c_str(), args);
+    #else
+      pfn_vswprintf(p.get(), N, Format.c_str(), args);
+    #endif
 
     va_end(args);
 
@@ -841,20 +858,28 @@ namespace ce {
 
   int ceapi ceBoxW(HWND hWnd, const std::wstring Format, ...)
   {
+    if (ceInitMiscRoutine() != CE_OK) {
+      return 0;
+    }
+
     va_list args;
 
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
     std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return 0;
     }
 
     ZeroMemory(p.get(), 2*N);
 
-    vswprintf(p.get(), Format.c_str(), args);
+    #ifdef _MSC_VER
+      vswprintf(p.get(), Format.c_str(), args);
+    #else
+      pfn_vswprintf(p.get(), N, Format.c_str(), args);
+    #endif
 
     va_end(args);
 
@@ -863,20 +888,28 @@ namespace ce {
 
   int ceapi ceBoxW(HWND hWnd, uint uType, const std::wstring lpcwszCaption, const std::wstring Format, ...)
   {
+    if (ceInitMiscRoutine() != CE_OK) {
+      return 0;
+    }
+
     va_list args;
 
     va_start(args, Format);
 
     int N = ceGetFormattedLengthW(Format, args);
     std::shared_ptr<wchar> p(ceCfgSP(N, wchar));
-    if (p == nullptr) {
+    if (p == nullptr || N == -1) {
       va_end(args);
       return 0;
     }
 
     ZeroMemory(p.get(), 2*N);
 
-    vswprintf(p.get(), Format.c_str(), args);
+    #ifdef _MSC_VER
+      vswprintf(p.get(), Format.c_str(), args);
+    #else
+      pfn_vswprintf(p.get(), N, Format.c_str(), args);
+    #endif
 
     va_end(args);
 
@@ -962,9 +995,9 @@ namespace ce {
     ZeroMemory(p.get(), MAX_SIZE);
 
     #if defined(_MSC_VER) && (_MSC_VER > 1200) // Above VC++ 6.0
-    localtime_s(&lt, &t);
+      localtime_s(&lt, &t);
     #else
-    memcpy((void*)&lt, localtime(&t), sizeof(tm));
+      memcpy((void*)&lt, localtime(&t), sizeof(tm));
     #endif
 
     strftime(p.get(), MAX_SIZE, Format.c_str(), &lt);
@@ -987,9 +1020,9 @@ namespace ce {
     ZeroMemory(p.get(), 2*MAXBYTE);
 
     #if defined(_MSC_VER) && (_MSC_VER > 1200) // Above VC++ 6.0
-    localtime_s(&lt, &t);
+      localtime_s(&lt, &t);
     #else
-    memcpy((void*)&lt, localtime(&t), sizeof(tm));
+      memcpy((void*)&lt, localtime(&t), sizeof(tm));
     #endif
 
     wcsftime(p.get(), 2*MAXBYTE, Format.c_str(), &lt);
@@ -1031,7 +1064,7 @@ namespace ce {
     return ws;
   }
 
-  std::string ceapi cePwcToPac(const std::wstring String)
+  std::string ceapi ceToStringA(const std::wstring String)
   {
     std::string s;
     s.clear();
@@ -1052,7 +1085,7 @@ namespace ce {
     return s;
   }
 
-  std::wstring ceapi cePacToPwc(const std::string String)
+  std::wstring ceapi ceToStringW(const std::string String)
   {
     std::wstring ws;
     ws.clear();
@@ -1982,7 +2015,7 @@ namespace ce {
 
     void* p = nullptr;
     if (hmod && !RoutineName.empty()) {
-      std::string s = cePwcToPac(RoutineName);
+      std::string s = ceToStringA(RoutineName);
       p = (void*)GetProcAddress(hmod, s.c_str());
       m_LastErrorCode = GetLastError();
     }
@@ -1999,7 +2032,7 @@ namespace ce {
 
     void* p = nullptr;
     if (hmod && !RoutineName.empty()) {
-      std::string s = cePwcToPac(RoutineName);
+      std::string s = ceToStringA(RoutineName);
       p = (void*)GetProcAddress(hmod, s.c_str());
     }
 
@@ -3381,7 +3414,7 @@ namespace ce {
 
     m_LastErrorCode = GetLastError();
 
-    const std::string s = cePwcToPac(lpwszResult);
+    const std::string s = ceToStringA(lpwszResult);
 
     return (float)atof(s.c_str());
   }
