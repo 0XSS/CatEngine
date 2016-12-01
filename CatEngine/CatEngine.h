@@ -1262,7 +1262,6 @@ namespace ce {
   #define ceExtractFileName ceExtractFileNameA
   #define ceGetCurrentFilePath ceGetCurrentFilePathA
   #define ceGetCurrentDirectory ceGetCurrentDirectoryA
-  #define ceMultiStringToList ceMultiStringToListA
 #endif
 
 

@@ -18,6 +18,7 @@ G++ Test.cpp --std=c++11 -lCatEngine -lws2_32 -o Test.exe && Test.exe
 #include <memory>
 #include <cstdio>
 #include <limits>
+#include <algorithm>
 #include <iostream>
 
 // Remove min & max macros
