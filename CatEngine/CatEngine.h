@@ -48,6 +48,7 @@
 #endif
 
 #include <Windows.h>
+#include <Winsvc.h>
 #include <TlHelp32.h>
 #include <list>
 #include <string>
