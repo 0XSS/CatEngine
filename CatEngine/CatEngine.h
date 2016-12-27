@@ -1,7 +1,7 @@
 /*****************************************************/
 /*  Name:     CatEngine                              */
 /*  Version:  1.0                                    */
-/*  Platform: Windows                                */
+/*  Platform: Windows 32-bit/64-bit                  */
 /*  Type:     C++ Library for MSVC/MinGW/C++Builder  */
 /*  Author:   Vic P. aka vic4key                     */
 /*  Mail:     vic4key[at]gmail.com                   */
@@ -18,8 +18,7 @@
   3. Only support C++ compiler.
   4. If you compile by MinGW, remember to include lws2_32.
   5. Force BYTE alignment of structures.
-  6. Use /MT (Multi-Threaded) option to link for code generation (?)
-  7. Remember to use ce namespace.
+  6. Remember to use ce namespace.
 */
 
 /* CatEngine Version */
