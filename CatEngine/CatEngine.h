@@ -53,6 +53,10 @@
 #include <string>
 #include <vector>
 #include <memory>
+#ifndef _WINSOCKAPI_
+#include <WinSock2.h>
+#endif
+
 
 
 /* CatEngine's configuration */
