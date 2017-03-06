@@ -1,4 +1,5 @@
-#include "CatEngine.h"
+#include "../include/CatEngine.h"
+
 #include <ctime>
 #include <algorithm>
 

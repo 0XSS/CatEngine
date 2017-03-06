@@ -184,7 +184,7 @@ int _tmain(int argc, _TCHAR* argv[])
   std::tcout << ce::ceLastError().c_str() << std::endl;*/
 
   // CESocket
-  /*ce::CESocket socket;
+  ce::CESocket socket;
 
   char d[5*1024 + 1], s[] = "GET /?gws_rd=ssl HTTP/1.1\r\n\r\n";
   
@@ -226,7 +226,7 @@ int _tmain(int argc, _TCHAR* argv[])
   if (!socket.ceClose()) {
     std::tcout << _T("Socket -> Close -> Failed") << std::endl;
     return 1;
-  }*/
+  }
 
   // CEDynHook
   /*ce::CEDynHook API[2];

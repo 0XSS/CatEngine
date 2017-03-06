@@ -88,7 +88,7 @@
 /* HDE */
 // Hacker Disassembler Engine 32/64 C
 // Copyright (c) 2008-2009, Vyacheslav Patkov
-// Vyacheslav Patkov, thanks you so much !
+// Vyacheslav Patkov, Thanks so much !
 
 // --- Begin of HDE --- //
 
