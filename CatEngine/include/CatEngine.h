@@ -85,10 +85,35 @@
 
 
 
+/* Tsuda Kageyu's Internal Buffer Handler */
+// Internal Buffer Handler
+// Copyright (c) 2009-2017 Tsuda Kageyu
+// Tsuda Kageyu, Thank you so much !
+
+// --- Begin of Internal Buffer Handler --- //
+
+namespace IBH {
+  #if defined(_M_X64) || defined(__x86_64__)
+  #define MEMORY_SLOT_SIZE 64
+  #else
+  #define MEMORY_SLOT_SIZE 32
+  #endif
+
+  VOID   InitializeBuffer();
+  VOID   UninitializeBuffer();
+  LPVOID AllocateBuffer(LPVOID pOrigin);
+  VOID   FreeBuffer(LPVOID pBuffer);
+  BOOL   IsExecutableAddress(LPVOID pAddress);
+}
+
+// --- End of Internal Buffer Handler --- //
+
+
+
 /* HDE */
 // Hacker Disassembler Engine 32/64 C
 // Copyright (c) 2008-2009, Vyacheslav Patkov
-// Vyacheslav Patkov, Thanks so much !
+// Vyacheslav Patkov, Thank you so much !
 
 // --- Begin of HDE --- //
 
@@ -1289,6 +1314,10 @@ namespace ce {
 
   #define API_GETPROC(M, F) pfn ## F = (Pfn ## F)ce::CELibrary::ceGetRoutineAddressFast(T( # M ), T( # F ))
 
+  // Custom macros. Don't use there macro. Only use theme for some special case.
+  #define API_GETPROCV(MV, F) pfn ## F = (Pfn ## F)MV.ceGetRoutineAddress(T( # F ));
+  #define API_GETPROCVA(MV, F) pfn ## F ## A = (Pfn ## F ## A)MV.ceGetRoutineAddress(T( # F ));
+
   class CELibraryA : public CELastError {
   public:
     CELibraryA();
@@ -1432,7 +1461,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     CEDynHookSupport() : m_Hooked(false) {};
     virtual ~CEDynHookSupport(){};
 
-    ulongptr ceapi ceJumpLen(ulongptr ulSrcAddress, ulongptr ulDestAddress);
+    ulongptr ceapi ceJumpLen(ulongptr ulSrcAddress, ulongptr ulDestAddress, ulongptr ulInstSize);
     bool ceapi ceStartDetour(void* pProc, void* pHookProc, void** pOldProc);
     bool ceapi ceStopDetour(void* pProc, void** pOldProc);
   private:
