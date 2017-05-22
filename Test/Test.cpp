@@ -183,44 +183,51 @@ int _tmain(int argc, _TCHAR* argv[])
   std::wcout << std::hex << ce::ceRemoteGetModuleHandleW(explorerPID, L"kernel32.dll") << std::endl;
   std::tcout << ce::ceLastError().c_str() << std::endl;*/
 
-  // CESocket
-  /*ce::CESocket socket;
+  /*// CESocket
+  ce::CESocket socket;
 
-  char d[5*1024 + 1], s[] = "GET /?gws_rd=ssl HTTP/1.1\r\n\r\n";
-  
+  const std::string REQ_HOST = "d.7-zip.org";
+  std::string REQ_CONTENT;
+  REQ_CONTENT.clear();
+  REQ_CONTENT.append("GET /a/7z1700-src.7z\r\n");
+  REQ_CONTENT.append("User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:53.0) Gecko/20100101 Firefox/53.0\r\n");
+  REQ_CONTENT.append("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,* / *;q=0.8\r\n");
+  REQ_CONTENT.append("Accept-Language: en-US,en;q=0.5\r\n");
+  REQ_CONTENT.append("Accept-Encoding: gzip, deflate\r\n");
+  REQ_CONTENT.append("DNT: 1\r\n");
+  REQ_CONTENT.append("Connection: keep-alive\r\n");
+  REQ_CONTENT.append("Upgrade-Insecure-Requests: 1\r\n");
+  REQ_CONTENT.append("If-Modified-Since: *\r\n");
+  REQ_CONTENT.append("\r\n");
+
   if (socket.ceSocket(ce::SAF_INET, ce::ST_STREAM) != ce::CE_OK) {
     std::tcout << _T("Socket -> Create -> Failed") << std::endl;
     return 1;
   }
 
-  if (socket.ceConnect("google.com", 80) != ce::CE_OK) {
+  if (socket.ceConnect(REQ_HOST, 80) != ce::CE_OK) {
     std::tcout << _T("Socket -> Connect -> Failed") << std::endl;
     return 1;
   }
 
-  if (socket.ceSend(s, lstrlenA(s)) == SOCKET_ERROR) {
+  if (socket.ceSend(REQ_CONTENT.data(), int(REQ_CONTENT.length())) == SOCKET_ERROR) {
     std::tcout << _T("Socket -> Connect -> Failed") << std::endl;
     return 1;
   }
 
-  ZeroMemory(d, sizeof(d));
-  if (socket.ceRecv(d, sizeof(d)) == SOCKET_ERROR) {
-    std::tcout << _T("Socket -> Recv -> Failed") << std::endl;
-    return 1;
-  }
-
-  auto l = ce::ceSplitStringA(d, "\r\n");
-  auto e = std::find_if(l.begin(), l.end(), [](std::string s) {
-    return (s.find("Content-Length") != std::string::npos);
-  });
-
-  int iContentLength = -1;
-  if (e != l.end()) {
-    auto a = ce::ceSplitStringA(*e, ": ");
-    if (a.size() > 0) {
-      iContentLength = atoi(a.rbegin()->c_str());
-      std::tcout << T("Content-Length = ") << iContentLength << std::endl;
-    }
+  ce::CEFileA src7z;
+  src7z.ceInit("E:\\7z1700-src.7z", ce::eFileModeFlags::FM_CREATEALWAY);
+  if (src7z.ceIsReady()) {
+    ce::CEBinary D(1024);
+    ce::IResult N = -1, nRecvBytes = 0;
+    do {
+      N = socket.ceRecv(D);
+      if (N > 0) {
+        src7z.ceWrite(D.GetpData(), D.GetUsedSize());
+        nRecvBytes += N;
+      }
+    } while (N > 0);
+    src7z.ceClose();
   }
 
   if (!socket.ceClose()) {

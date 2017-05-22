@@ -1302,12 +1302,38 @@ namespace ce {
     CELastError() : m_LastErrorCode(ERROR_SUCCESS) {};
     virtual ~CELastError() {};
 
-    ulong ceapi ceGetLastErrorCode() {
+    virtual ulong ceapi ceGetLastErrorCode() {
       return m_LastErrorCode;
     }
 
   protected:
     ulong m_LastErrorCode;
+  };
+
+  /* --- Cat : Binary --- */
+
+  class CEBinary {
+  public:
+    CEBinary();
+    CEBinary(const CEBinary& right);
+    CEBinary(const void* pData, ulong ulSize);
+    CEBinary(ulong ulSize);
+    virtual ~CEBinary();
+
+    const CEBinary& operator=(const CEBinary &right);
+    bool operator==(const CEBinary &right) const;
+    bool operator!=(const CEBinary &right) const;
+    void AdjustSize (const ulong ulSize);
+    const ulong GetSize() const;
+    void SetUsedSize(const ulong ulUsedSize);
+    const ulong GetUsedSize() const;
+    void SetpData(const void* pData, ulong ulSize);
+    void* GetpData();
+    const void* GetpData() const;
+  private:
+    void* m_pData;
+    ulong m_Size;
+    ulong m_UsedSize;
   };
 
   /* --- Cat : Library --- */
@@ -1377,30 +1403,34 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     bool ceapi ceIsSocketValid(SOCKET socket);
   public:
     CESocket();
-    CESocket(eSocketAF sockAF, eSocketType socketType);
+    CESocket(eSocketAF SockAF, eSocketType SocketType);
     virtual ~CESocket();
-    CEResult ceapi ceSocket(eSocketAF socketAF, eSocketType socketType, eSocketProtocol socketProtocol = SP_NONE);
-    CEResult ceapi ceBind(const TAccessPoint accessPoint);
-    CEResult ceapi ceBind(const std::string Address, ushort usNPort);
+    CEResult ceapi ceSocket(eSocketAF SocketAF, eSocketType SocketType, eSocketProtocol SocketProtocol = SP_NONE);
+    CEResult ceapi ceBind(const TAccessPoint& AccessPoint);
+    CEResult ceapi ceBind(const std::string& Address, ushort usNPort);
     CEResult ceapi ceListen(int iMaxConnection = SOMAXCONN);
-    CEResult ceapi ceAccept(TSocketInfomation& socketInformation);
-    CEResult ceapi ceConnect(const TAccessPoint accessPoint);
-    CEResult ceapi ceConnect(const std::string Address, ushort usPort);
-    IResult ceapi ceSend(const char * lpData, int iLength, eSocketMessage socketMessage = SM_NONE);
-    IResult ceapi ceSend(const SOCKET c, const char * lpData, int iLength, eSocketMessage socketMessage = SM_NONE);
-    IResult ceapi ceRecv(char* lpData, int iLength, eSocketMessage socketMessage = SM_NONE);
-    IResult ceapi ceRecv(SOCKET c, char* lpData, int iLength, eSocketMessage socketMessage = SM_NONE);
-    IResult ceapi ceSendTo(const char * lpData, int iLength, TSocketInfomation& socketInformation);
-    IResult ceapi ceRecvFrom(char* lpData, int iLength, TSocketInfomation& socketInformation);
+    CEResult ceapi ceAccept(TSocketInfomation& SocketInformation);
+    CEResult ceapi ceConnect(const TAccessPoint& AccessPoint);
+    CEResult ceapi ceConnect(const std::string& Address, ushort usPort);
+    IResult ceapi ceSend(const char* lpData, int iLength, eSocketMessage msg = SM_NONE);
+    IResult ceapi ceSend(const CEBinary& Data, eSocketMessage msg = SM_NONE);
+    IResult ceapi ceSend(const SOCKET socket, const char* lpData, int iLength, eSocketMessage msg = SM_NONE);
+    IResult ceapi ceRecv(char* lpData, int iLength, eSocketMessage msg = SM_NONE);
+    IResult ceapi ceRecv(CEBinary& Data, eSocketMessage msg = SM_NONE);
+    IResult ceapi ceRecv(SOCKET socket, char* lpData, int iLength, eSocketMessage msg = SM_NONE);
+    IResult ceapi ceSendTo(const char* lpData, int iLength, TSocketInfomation& SocketInformation);
+    IResult ceapi ceSendTo(const CEBinary& Data, TSocketInfomation& SocketInformation);
+    IResult ceapi ceRecvFrom(char* lpData, int iLength, TSocketInfomation& SocketInformation);
+    IResult ceapi ceRecvFrom(CEBinary& Data, TSocketInfomation& SocketInformation);
     bool ceapi ceClose(SOCKET socket = 0);
     SOCKET ceapi ceGetSocket();
-    CEResult ceapi ceGetOption(int iLevel, int iOptName, std::string OptVal, int * lpiLength);
-    CEResult ceapi ceSetOption(int iLevel, int iOptName, const std::string OptVal, int iLength);
-    CEResult ceapi ceShutdown(eShutdownFlag shutdownFlag);
+    CEResult ceapi ceGetOption(int iLevel, int iOptName, char* pOptVal, int* lpiLength);
+    CEResult ceapi ceSetOption(int iLevel, int iOptName, const std::string& OptVal, int iLength);
+    CEResult ceapi ceShutdown(eShutdownFlag ShutdownFlag);
     std::string ceapi ceGetLocalHostName();
-    std::string ceapi ceGetHostByName(const std::string Name);
-    bool ceapi ceIsHostName(const std::string s);
-    bool ceapi ceBytesToIP(TSocketInfomation& socketInformation);
+    std::string ceapi ceGetHostByName(const std::string& Name);
+    bool ceapi ceIsHostName(const std::string& s);
+    bool ceapi ceBytesToIP(const TSocketInfomation& SocketInformation);
   protected:
   };
 
@@ -1516,6 +1546,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     CEFileSupport(){};
     virtual ~CEFileSupport(){};
     virtual bool ceapi ceIsFileHandleValid(HANDLE fileHandle);
+    virtual bool ceapi ceIsReady();
     virtual ulong ceapi ceGetFileSize();
     virtual bool ceapi ceRead(void* Buffer, ulong ulSize);
     virtual bool ceapi ceRead(

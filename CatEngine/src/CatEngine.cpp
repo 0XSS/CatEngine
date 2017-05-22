@@ -1886,6 +1886,106 @@ namespace ce {
 
   /****************************************************** CLASSES *****************************************************/
 
+  /* ---------------------------------------------------- Binary ---------------------------------------------------- */
+
+  CEBinary::CEBinary() : m_UsedSize(0), m_Size(0), m_pData(0) {}
+
+  CEBinary::CEBinary(const CEBinary &right) : m_UsedSize(0), m_Size(0), m_pData(0)
+  {
+    SetpData(right.m_pData, right.m_Size);
+  }
+
+  CEBinary::CEBinary(const void* pData, ulong ulSize) : m_UsedSize(0), m_Size(0), m_pData(0)
+  {
+    SetpData(pData, ulSize);
+  }
+
+  CEBinary::CEBinary(ulong ulSize) : m_UsedSize(0), m_Size(0), m_pData(0)
+  {
+    AdjustSize(ulSize);
+  }
+
+  CEBinary::~CEBinary()
+  {
+    if (m_pData != nullptr) {
+      delete[] m_pData;
+    }
+  }
+
+  const CEBinary & CEBinary::operator=(const CEBinary &right)
+  {
+    if(this != &right) {
+      SetpData(right.m_pData, right.m_Size);
+    }
+
+    return *this;
+  }
+
+  bool CEBinary::operator==(const CEBinary &right) const
+  {
+    if(m_Size != right.m_Size) {
+      return false;
+    }
+
+    return (memcmp(m_pData, right.m_pData, m_Size) == 0);
+  }
+
+  bool CEBinary::operator!=(const CEBinary& right) const
+  {
+    return (!(*this == right));
+  }
+
+  const ulong CEBinary::GetSize() const
+  {
+    return m_Size;
+  }
+
+  void CEBinary::SetUsedSize(ulong ulUsedSize)
+  {
+    if (ulUsedSize <= m_Size) {
+      m_UsedSize = ulUsedSize;
+    }
+  }
+
+  const ulong CEBinary::GetUsedSize() const
+  {
+    return m_UsedSize;
+  }
+
+  void* CEBinary::GetpData()
+  {
+    return m_pData;
+  }
+
+  const void* CEBinary::GetpData() const
+  {
+    return m_pData;
+  }
+
+  void CEBinary::SetpData(const void* pData, ulong ulSize)
+  {
+    AdjustSize(ulSize);
+    memcpy(m_pData, pData, ulSize);
+    m_Size = ulSize;
+    m_UsedSize = ulSize;
+  }
+
+  void CEBinary::AdjustSize(ulong ulSize)
+  {
+    if(ulSize > m_Size) {
+      if(m_pData != nullptr) {
+        delete[] m_pData;
+      }
+
+      m_pData = new uchar[ulSize];
+      if (m_pData != nullptr) {
+        m_Size = ulSize;
+        m_UsedSize = ulSize;
+        memset(m_pData, 0, m_Size*sizeof(uchar));
+      }
+    }
+  }
+
   /* ---------------------------------------------------- Library --------------------------------------------------- */
 
   CELibraryA::CELibraryA()
@@ -2130,12 +2230,12 @@ namespace ce {
     return CE_OK;
   }
 
-  CEResult ceapi CESocket::ceBind(TAccessPoint accessPoint)
+  CEResult ceapi CESocket::ceBind(const TAccessPoint& accessPoint)
   {
     return this->ceBind(accessPoint.Host, accessPoint.Port);
   }
 
-  CEResult ceapi CESocket::ceBind(const std::string Address, unsigned short usPort)
+  CEResult ceapi CESocket::ceBind(const std::string& Address, unsigned short usPort)
   {
     if (!this->ceIsSocketValid(m_Socket)) {
       return 1;
@@ -2178,35 +2278,35 @@ namespace ce {
     return (result == SOCKET_ERROR ? 2 : CE_OK);
   }
 
-  CEResult ceapi CESocket::ceAccept(TSocketInfomation& socketInformation)
+  CEResult ceapi CESocket::ceAccept(TSocketInfomation& SocketInformation)
   {
     if (!this->ceIsSocketValid(m_Socket)) {
       return 1;
     }
 
-    memset((void*)&socketInformation, 0, sizeof(socketInformation));
+    memset((void*)&SocketInformation, 0, sizeof(SocketInformation));
 
-    int size = sizeof(socketInformation.sai);
+    int size = sizeof(SocketInformation.sai);
 
-    socketInformation.s = accept(m_Socket, (struct sockaddr*)&socketInformation.sai, &size);
+    SocketInformation.s = accept(m_Socket, (struct sockaddr*)&SocketInformation.sai, &size);
 
     m_LastErrorCode = GetLastError();
 
-    if (!this->ceIsSocketValid(socketInformation.s)) {
+    if (!this->ceIsSocketValid(SocketInformation.s)) {
       return 2;
     }
 
-    this->ceBytesToIP(socketInformation);
+    this->ceBytesToIP(SocketInformation);
 
     return CE_OK;
   }
 
-  CEResult ceapi CESocket::ceConnect(const TAccessPoint ap)
+  CEResult ceapi CESocket::ceConnect(const TAccessPoint& AccessPoint)
   {
-    return this->ceConnect(ap.Host, ap.Port);
+    return this->ceConnect(AccessPoint.Host, AccessPoint.Port);
   }
 
-  CEResult ceapi CESocket::ceConnect(const std::string Address, unsigned short usPort)
+  CEResult ceapi CESocket::ceConnect(const std::string& Address, unsigned short usPort)
   {
     std::string IP;
 
@@ -2233,76 +2333,96 @@ namespace ce {
     return CE_OK;
   }
 
-  IResult ceapi CESocket::ceSend(const char * lpData, int iLength, eSocketMessage socketMessage)
+  IResult ceapi CESocket::ceSend(const char* lpData, int iLength, eSocketMessage msg)
   {
-    return this->ceSend(m_Socket, lpData, iLength, socketMessage);
+    return this->ceSend(m_Socket, lpData, iLength, msg);
   }
 
-  IResult ceapi CESocket::ceSend(SOCKET socket, const char * lpData, int iLength, eSocketMessage socketMessage)
+  IResult ceapi CESocket::ceSend(const CEBinary& Data, eSocketMessage msg)
+  {
+    return this->ceSend(m_Socket, (const char*)Data.GetpData(), Data.GetUsedSize(), msg);
+  }
+
+  IResult ceapi CESocket::ceSend(SOCKET socket, const char* lpData, int iLength, eSocketMessage msg)
   {
     if (!this->ceIsSocketValid(socket)) {
       return SOCKET_ERROR;
     }
 
-    IResult z;
-    if ((z = send(socket, lpData, iLength, socketMessage)) == SOCKET_ERROR) {
+    IResult z = send(socket, lpData, iLength, msg);
+    if (z == SOCKET_ERROR) {
       m_LastErrorCode = GetLastError();
-      return SOCKET_ERROR;
     }
 
     return z;
   }
 
-  IResult ceapi CESocket::ceRecv(char* lpData, int iLength, eSocketMessage socketMessage)
+  IResult ceapi CESocket::ceRecv(char* lpData, int iLength, eSocketMessage msg)
   {
-    return this->ceRecv(m_Socket, lpData, iLength, socketMessage);
+    return this->ceRecv(m_Socket, lpData, iLength, msg);
   }
 
-  IResult ceapi CESocket::ceRecv(SOCKET socket, char * lpData, int iLength, eSocketMessage socketMessage)
+  IResult ceapi CESocket::ceRecv(CEBinary& Data, eSocketMessage msg)
+  {
+    void* p = Data.GetpData();
+    auto z = this->ceRecv(m_Socket, (char*)p, Data.GetSize(), msg);
+    Data.SetUsedSize(z);
+    return z;
+  }
+
+  IResult ceapi CESocket::ceRecv(SOCKET socket, char* lpData, int iLength, eSocketMessage msg)
   {
     if (!this->ceIsSocketValid(socket)) {
       return SOCKET_ERROR;
     }
 
-    IResult z;
-    if ((z = recv(socket, lpData, iLength, socketMessage)) == SOCKET_ERROR) {
+    IResult z = recv(socket, lpData, iLength, msg);
+    if (z == SOCKET_ERROR) {
       m_LastErrorCode = GetLastError();
-      return SOCKET_ERROR;
-    }
-
-    if (iLength > 0) {
-      lpData[iLength - 1] = '\0';
     }
 
     return z;
   }
 
-  IResult ceapi CESocket::ceSendTo(const char * lpData, int iLength, TSocketInfomation& si)
+  IResult ceapi CESocket::ceSendTo(const CEBinary& Data, TSocketInfomation& SocketInformation)
   {
-    if (!this->ceIsSocketValid(m_Socket)) {
-      return SOCKET_ERROR;
-    }
-
-    int result = sendto(m_Socket, lpData, iLength, 0, (const struct sockaddr*)&si.sai, sizeof(si.sai));
-
-    m_LastErrorCode = GetLastError();
-
-    return result;
+    return this->ceSendTo((const char*)Data.GetpData(), Data.GetUsedSize(), SocketInformation);
   }
 
-  IResult ceapi CESocket::ceRecvFrom(char * lpData, int iLength, TSocketInfomation& si)
+  IResult ceapi CESocket::ceSendTo(const char* lpData, int iLength, TSocketInfomation& SocketInformation)
   {
     if (!this->ceIsSocketValid(m_Socket)) {
       return SOCKET_ERROR;
     }
 
-    int n = sizeof(si.sai), z = SOCKET_ERROR;
-    if ((z = recvfrom(m_Socket, lpData, iLength, 0, (struct sockaddr *)&si.sai, &n)) == SOCKET_ERROR) {
+    IResult z = sendto(m_Socket, lpData, iLength, 0, (const struct sockaddr*)&SocketInformation.sai, sizeof(SocketInformation.sai));
+    if (z == SOCKET_ERROR) {
       m_LastErrorCode = GetLastError();
+    }
+
+    return z;
+  }
+
+  IResult ceapi CESocket::ceRecvFrom(CEBinary& Data, TSocketInfomation& SocketInformation)
+  {
+    void* p = Data.GetpData();
+    return this->ceRecvFrom((char*)p, Data.GetUsedSize(), SocketInformation);
+  }
+
+  IResult ceapi CESocket::ceRecvFrom(char* lpData, int iLength, TSocketInfomation& SocketInformation)
+  {
+    if (!this->ceIsSocketValid(m_Socket)) {
       return SOCKET_ERROR;
     }
 
-    this->ceBytesToIP(si);
+    int n = sizeof(SocketInformation.sai);
+	  IResult z = recvfrom(m_Socket, lpData, iLength, 0, (struct sockaddr *)&SocketInformation.sai, &n);
+    if (z == SOCKET_ERROR) {
+      m_LastErrorCode = GetLastError();
+    }
+    else {
+      this->ceBytesToIP(SocketInformation);
+    }
 
     return z;
   }
@@ -2330,30 +2450,21 @@ namespace ce {
     return m_Socket;
   }
 
-  CEResult ceapi CESocket::ceGetOption(int iLevel, int iOptName, std::string OptVal, int * lpiLength)
+  CEResult ceapi CESocket::ceGetOption(int iLevel, int iOptName, char* pOptVal, int* lpiLength)
   {
     if (!this->ceIsSocketValid(m_Socket)) {
       return 1;
     }
 
-    std::shared_ptr<char> p(ceCfgSP(MAXBYTE, char));
-    if (p == nullptr) {
+    if (getsockopt(m_Socket, iLevel, iOptName, pOptVal, lpiLength) != 0) {
+      m_LastErrorCode = GetLastError();
       return 2;
     }
-
-    memset(p.get(), 0, MAXBYTE);
-
-    if (getsockopt(m_Socket, iLevel, iOptName, p.get(), lpiLength) != 0) {
-      m_LastErrorCode = GetLastError();
-      return 3;
-    }
-
-    OptVal = p.get();
 
     return CE_OK;
   }
 
-  CEResult ceapi CESocket::ceSetOption(int iLevel, int iOptName, const std::string OptVal, int iLength)
+  CEResult ceapi CESocket::ceSetOption(int iLevel, int iOptName, const std::string& OptVal, int iLength)
   {
     if (!this->ceIsSocketValid(m_Socket)) {
       return 1;
@@ -2371,13 +2482,13 @@ namespace ce {
     return CE_OK;
   }
 
-  CEResult ceapi CESocket::ceShutdown(eShutdownFlag shutdownFlag)
+  CEResult ceapi CESocket::ceShutdown(eShutdownFlag ShutdownFlag)
   {
     if (!this->ceIsSocketValid(m_Socket)) {
       return 1;
     }
 
-    if (shutdown(m_Socket, (int)shutdownFlag) == SOCKET_ERROR) {
+    if (shutdown(m_Socket, (int)ShutdownFlag) == SOCKET_ERROR) {
       m_LastErrorCode = GetLastError();
       return 2;
     }
@@ -2410,7 +2521,7 @@ namespace ce {
     return r;
   }
 
-  std::string ceapi CESocket::ceGetHostByName(const std::string Name)
+  std::string ceapi CESocket::ceGetHostByName(const std::string& Name)
   {
     std::string r;
     r.clear();
@@ -2447,7 +2558,7 @@ namespace ce {
     return r;
   }
 
-  bool ceapi CESocket::ceIsHostName(const std::string s)
+  bool ceapi CESocket::ceIsHostName(const std::string& s)
   {
     bool r = false;
     const std::string MASK = "01234567890.";
@@ -2470,15 +2581,15 @@ namespace ce {
     return r;
   }
 
-  bool ceapi CESocket::ceBytesToIP(TSocketInfomation& socketInformation)
+  bool ceapi CESocket::ceBytesToIP(const TSocketInfomation& SocketInformation)
   {
     if (sprintf(
-        (char*)socketInformation.ip,
+        (char*)SocketInformation.ip,
         "%d.%d.%d.%d\0",
-        socketInformation.sai.sin_addr.S_un.S_un_b.s_b1,
-        socketInformation.sai.sin_addr.S_un.S_un_b.s_b2,
-        socketInformation.sai.sin_addr.S_un.S_un_b.s_b3,
-        socketInformation.sai.sin_addr.S_un.S_un_b.s_b4
+        SocketInformation.sai.sin_addr.S_un.S_un_b.s_b1,
+        SocketInformation.sai.sin_addr.S_un.S_un_b.s_b2,
+        SocketInformation.sai.sin_addr.S_un.S_un_b.s_b3,
+        SocketInformation.sai.sin_addr.S_un.S_un_b.s_b4
       ) < 0) return false;
     else return true;
   }
@@ -4763,6 +4874,11 @@ namespace ce {
     }
 
     return true;
+  }
+
+  bool ceapi CEFileSupport::ceIsReady()
+  {
+    return this->ceIsFileHandleValid(m_FileHandle);
   }
 
   bool ceapi CEFileSupport::ceRead(
