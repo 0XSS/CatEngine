@@ -147,7 +147,9 @@ int _tmain(int argc, _TCHAR* argv[])
     std::tcout << PID << std::endl;
   }
 
-  std::tcout  << ce::cePidToName(*PIDs.begin()) << std::endl;*/
+  if (!PIDs.empty()) {
+    std::tcout  << ce::cePidToName(*PIDs.begin()) << std::endl;
+  }*/
 
   // File/Directory
   /*const std::tstring FILE_DIR  =  _T("F:\\Vic's Workspace\\Documents\\");
@@ -183,8 +185,8 @@ int _tmain(int argc, _TCHAR* argv[])
   std::wcout << std::hex << ce::ceRemoteGetModuleHandleW(explorerPID, L"kernel32.dll") << std::endl;
   std::tcout << ce::ceLastError().c_str() << std::endl;*/
 
-  /*// CESocket
-  ce::CESocket socket;
+  // CESocket
+  /*ce::CESocket socket;
 
   const std::string REQ_HOST = "d.7-zip.org";
   std::string REQ_CONTENT;
@@ -523,8 +525,8 @@ int _tmain(int argc, _TCHAR* argv[])
   }*/
 
   // CEPEFile
-  /*ce::CEPEFileT<ce::pe32> pe(_T("F:\\SVN\\CatEngine\\Win32\\Release\\Test.exe"));
-  //ce::CEPEFileT<ce::pe64> pe(_T("F:\\SVN\\CatEngine\\x64\\Release\\Test.exe"));
+  /*//ce::CEPEFileT<ce::pe32> pe(_T("F:\\SVN\\CatEngine\\Release\\Test.exe"));
+  ce::CEPEFileT<ce::pe64> pe(_T("F:\\SVN\\CatEngine\\x64\\Release\\Test.exe"));
 
   ce::CEResult result = pe.ceParse();
   if (result != ce::CE_OK) {
@@ -621,12 +623,14 @@ int _tmain(int argc, _TCHAR* argv[])
 
   SEPERATOR()
 
-  auto DLL = pe.ceFindImportedDLL("USER32.dll");
+  auto DLL = pe.ceFindImportedDLL("KERNEL32.DLL");
   if (DLL.Name != "") {
     printf("%08X, '%s'\n", DLL.IIDID, DLL.Name.c_str());
   }
 
-  auto Function = pe.ceFindImportedFunction("Sleep");
+  SEPERATOR()
+
+  auto Function = pe.ceFindImportedFunction("GetLastError");
   if (Function.RVA != 0) {
     printf("%08X, %04X, %016X '%s'\n",
       Function.IIDID,

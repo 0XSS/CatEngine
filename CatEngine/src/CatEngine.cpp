@@ -49,7 +49,7 @@ namespace ce {
   typedef BOOL (WINAPI *PfnModule32NextW)(HANDLE hSnapshot, PModuleEntry32W lpme);
 
   typedef BOOL (WINAPI *PfnEnumProcessModules)(HANDLE hProcess, HMODULE *lphModule, DWORD cb, LPDWORD lpcbNeeded);
-  typedef BOOL (WINAPI *PfnEnumProcessModulesEx)(HANDLE  hProcess, HMODULE *lphModule, DWORD cb, LPDWORD lpcbNeeded, DWORD dwFilterFlag);
+  typedef BOOL (WINAPI *PfnEnumProcessModulesEx)(HANDLE hProcess, HMODULE *lphModule, DWORD cb, LPDWORD lpcbNeeded, DWORD dwFilterFlag);
 
   typedef BOOL (WINAPI *PfnEnumProcesses)(DWORD *pProcessIds, DWORD cb, DWORD *pBytesReturned);
 
@@ -143,17 +143,9 @@ namespace ce {
 
     API_GETPROCV(krnl32, EnumProcessModules);
     if (pfnEnumProcessModules == nullptr) {
-      pfnEnumProcessModulesEx = (PfnEnumProcessModulesEx)krnl32.ceGetRoutineAddress(T("K32EnumProcessModulesEx"));
+      pfnEnumProcessModules = (PfnEnumProcessModules)krnl32.ceGetRoutineAddress(T("K32EnumProcessModules"));
       if (pfnEnumProcessModules == nullptr) {
         return ceErrorCode(11);
-      }
-    }
-
-    API_GETPROCV(krnl32, EnumProcesses);
-    if (pfnEnumProcesses == nullptr) {
-
-      if (pfnEnumProcesses == nullptr) {
-        return ceErrorCode(12);
       }
     }
 
@@ -161,6 +153,14 @@ namespace ce {
     if (pfnEnumProcessModulesEx == nullptr) {
       pfnEnumProcessModulesEx = (PfnEnumProcessModulesEx)krnl32.ceGetRoutineAddress(T("K32EnumProcessModulesEx"));
       if (pfnEnumProcessModulesEx == nullptr) {
+        return ceErrorCode(12);
+      }
+    }
+
+    API_GETPROCV(krnl32, EnumProcesses);
+    if (pfnEnumProcesses == nullptr) {
+      pfnEnumProcesses = (PfnEnumProcesses)krnl32.ceGetRoutineAddress(T("K32EnumProcesses"));
+      if (pfnEnumProcesses == nullptr) {
         return ceErrorCode(13);
       }
     }
@@ -274,7 +274,7 @@ namespace ce {
 
   /***************************************************** FUNCTIONS ****************************************************/
 
-  /* ------------------------------------------------- Misc Working -------------------------------------------------- */
+  /* ------------------------------------------------- Misc Working ------------------------------------------------- */
 
   bool ceapi ceIsAdministrator()
   {
@@ -457,7 +457,7 @@ namespace ce {
     return result;
   }
 
-  void ceapi ceHexDump(void * Data, int Size)
+  void ceapi ceHexDump(const void* Data, int Size)
   {
     const int DEFAULT_DUMP_COLUMN = 16;
 
@@ -602,7 +602,7 @@ namespace ce {
   #endif
   }
 
-  int ceapi ceGetFormattedLengthA(const std::string Format, va_list args)
+  int ceapi ceGetFormattedLengthA(const std::string& Format, va_list args)
   {
     int N = -1;
 
@@ -619,7 +619,7 @@ namespace ce {
     return N;
   }
 
-  int ceapi ceGetFormattedLengthW(const std::wstring Format, va_list args)
+  int ceapi ceGetFormattedLengthW(const std::wstring& Format, va_list args)
   {
     int N = -1;
 
@@ -636,7 +636,7 @@ namespace ce {
     return N;
   }
 
-  int ceapi ceGetFormattedStringLengthA(const std::string Format, ...)
+  int ceapi ceGetFormattedStringLengthA(const std::string& Format, ...)
   {
     va_list args;
     va_start(args, Format);
@@ -650,7 +650,7 @@ namespace ce {
     return N;
   }
 
-  int ceapi ceGetFormattedStringLengthW(const std::wstring Format, ...)
+  int ceapi ceGetFormattedStringLengthW(const std::wstring& Format, ...)
   {
     va_list args;
     va_start(args, Format);
@@ -728,7 +728,7 @@ namespace ce {
     return s;
   }
 
-  void ceapi ceMsgA(const std::string Format, ...)
+  void ceapi ceMsgA(const std::string& Format, ...)
   {
     va_list args;
 
@@ -754,7 +754,7 @@ namespace ce {
     OutputDebugStringA(p.get());
   }
 
-  void ceapi ceMsgW(const std::wstring Format, ...)
+  void ceapi ceMsgW(const std::wstring& Format, ...)
   {
     if (ceInitMiscRoutine() != CE_OK) {
       return;
@@ -785,7 +785,7 @@ namespace ce {
     OutputDebugStringW(p.get());
   }
 
-  int ceapi ceBoxA(const std::string Format, ...)
+  int ceapi ceBoxA(const std::string& Format, ...)
   {
     va_list args;
 
@@ -811,7 +811,7 @@ namespace ce {
     return MessageBoxA(GetActiveWindow(), p.get(), CE_TITLE_ANSI.c_str(), MB_ICONINFORMATION);
   }
 
-  int ceapi ceBoxA(HWND hWnd, const std::string Format, ...)
+  int ceapi ceBoxA(HWND hWnd, const std::string& Format, ...)
   {
     va_list args;
 
@@ -837,7 +837,7 @@ namespace ce {
     return MessageBoxA(hWnd, p.get(), CE_TITLE_ANSI.c_str(), MB_ICONINFORMATION);
   }
 
-  int ceapi ceBoxA(HWND hWnd, uint uType, const std::string Caption, const std::string Format, ...)
+  int ceapi ceBoxA(HWND hWnd, uint uType, const std::string& Caption, const std::string& Format, ...)
   {
     va_list args;
 
@@ -863,7 +863,7 @@ namespace ce {
     return MessageBoxA(hWnd, p.get(), Caption.c_str(), uType);
   }
 
-  int ceapi ceBoxW(const std::wstring Format, ...)
+  int ceapi ceBoxW(const std::wstring& Format, ...)
   {
     if (ceInitMiscRoutine() != CE_OK) {
       return 0;
@@ -893,7 +893,7 @@ namespace ce {
     return MessageBoxW(GetActiveWindow(), p.get(), CE_TITLE_UNICODE.c_str(), MB_ICONINFORMATION);
   }
 
-  int ceapi ceBoxW(HWND hWnd, const std::wstring Format, ...)
+  int ceapi ceBoxW(HWND hWnd, const std::wstring& Format, ...)
   {
     if (ceInitMiscRoutine() != CE_OK) {
       return 0;
@@ -923,7 +923,7 @@ namespace ce {
     return MessageBoxW(hWnd, p.get(), CE_TITLE_UNICODE.c_str(), MB_ICONINFORMATION);
   }
 
-  int ceapi ceBoxW(HWND hWnd, uint uType, const std::wstring lpcwszCaption, const std::wstring Format, ...)
+  int ceapi ceBoxW(HWND hWnd, uint uType, const std::wstring& lpcwszCaption, const std::wstring& Format, ...)
   {
     if (ceInitMiscRoutine() != CE_OK) {
       return 0;
@@ -1017,7 +1017,7 @@ namespace ce {
     return s;
   }
 
-  std::string ceapi ceFormatTimeDateToStringA(const time_t t, const std::string Format)
+  std::string ceapi ceFormatTimeDateToStringA(const time_t t, const std::string& Format)
   {
     std::string s;
     s.clear();
@@ -1044,7 +1044,7 @@ namespace ce {
     return s;
   }
 
-  std::wstring ceapi ceFormatTimeDateToStringW(const time_t t, const std::wstring Format)
+  std::wstring ceapi ceFormatTimeDateToStringW(const time_t t, const std::wstring& Format)
   {
     std::wstring s;
     s.clear();
@@ -1073,35 +1073,35 @@ namespace ce {
 
   /* ------------------------------------------------ String Working ------------------------------------------------ */
 
-  std::string ceapi ceLowerStringA(const std::string String)
+  std::string ceapi ceLowerStringA(const std::string& String)
   {
     std::string s(String);
     std::transform(s.begin(), s.end(), s.begin(), tolower);
     return s;
   }
 
-  std::wstring ceapi ceLowerStringW(const std::wstring String)
+  std::wstring ceapi ceLowerStringW(const std::wstring& String)
   {
     std::wstring s(String);
     std::transform(s.begin(), s.end(), s.begin(), tolower);
     return s;
   }
 
-  std::string ceapi ceUpperStringA(const std::string String)
+  std::string ceapi ceUpperStringA(const std::string& String)
   {
     std::string s(String);
     std::transform(s.begin(), s.end(), s.begin(), toupper);
     return s;
   }
 
-  std::wstring ceapi ceUpperStringW(const std::wstring String)
+  std::wstring ceapi ceUpperStringW(const std::wstring& String)
   {
     std::wstring s(String);
     std::transform(s.begin(), s.end(), s.begin(), toupper);
     return s;
   }
 
-  std::string ceapi ceToStringA(const std::wstring String)
+  std::string ceapi ceToStringA(const std::wstring& String)
   {
     std::string s;
     s.clear();
@@ -1122,7 +1122,7 @@ namespace ce {
     return s;
   }
 
-  std::wstring ceapi ceToStringW(const std::string String)
+  std::wstring ceapi ceToStringW(const std::string& String)
   {
     std::wstring s;
     s.clear();
@@ -1143,7 +1143,7 @@ namespace ce {
     return s;
   }
 
-  std::list<std::string> ceapi ceSplitStringA(const std::string String, std::string Seperate)
+  std::list<std::string> ceapi ceSplitStringA(const std::string& String, const std::string& Seperate)
   {
     std::string s(String), sep(Seperate), sub;
     ulongptr start, end;
@@ -1166,7 +1166,7 @@ namespace ce {
     return l;
   }
 
-  std::list<std::wstring> ceapi ceSplitStringW(const std::wstring String, const std::wstring Seperate)
+  std::list<std::wstring> ceapi ceSplitStringW(const std::wstring& String, const std::wstring& Seperate)
   {
     std::wstring s(String), sep(Seperate), sub;
     ulongptr start, end;
@@ -1189,7 +1189,7 @@ namespace ce {
     return l;
   }
 
-  std::list<std::string> ceapi ceMultiStringToListA(const char * lpcszMultiString)
+  std::list<std::string> ceapi ceMultiStringToListA(const char* lpcszMultiString)
   {
     std::list<std::string> l;
 
@@ -1203,7 +1203,7 @@ namespace ce {
     return l;
   }
 
-  std::list<std::wstring> ceapi ceMultiStringToListW(const wchar_t * lpcwszMultiString)
+  std::list<std::wstring> ceapi ceMultiStringToListW(const wchar_t* lpcwszMultiString)
   {
     std::list<std::wstring> l;
 
@@ -1217,7 +1217,7 @@ namespace ce {
     return l;
   }
 
-  std::shared_ptr<char> ceapi ceListToMultiStringA(std::list<std::string> StringList)
+  std::shared_ptr<char> ceapi ceListToMultiStringA(const std::list<std::string>& StringList)
   {
     size_t ulLength = 0;
     for (std::string e : StringList) {
@@ -1244,7 +1244,7 @@ namespace ce {
     return p;
   }
 
-  std::shared_ptr<wchar> ceapi ceListToMultiStringW(std::list<std::wstring> StringList)
+  std::shared_ptr<wchar> ceapi ceListToMultiStringW(const std::list<std::wstring>& StringList)
   {
     size_t ulLength = 0;
     for (std::wstring e : StringList) {
@@ -1279,7 +1279,7 @@ namespace ce {
 
     HWND hwConsole = NULL;
 
-    PfnGetConsoleWindow pfnGetConsoleWindow = (PfnGetConsoleWindow)CELibrary::ceGetRoutineAddressFast(
+    PfnGetConsoleWindow pfnGetConsoleWindow = (PfnGetConsoleWindow)CELibrary::ceQuickGetRoutineAddress(
       T("kernel32.dll"),
       T("GetConsoleWindow")
     );
@@ -1294,7 +1294,7 @@ namespace ce {
   {
     typedef void (WINAPI *PfnGetNativeSystemInfo)(LPSYSTEM_INFO lpSystemInfo);
 
-    PfnGetNativeSystemInfo pfnGetNativeSystemInfo = (PfnGetNativeSystemInfo)CELibrary::ceGetRoutineAddressFast(
+    PfnGetNativeSystemInfo pfnGetNativeSystemInfo = (PfnGetNativeSystemInfo)CELibrary::ceQuickGetRoutineAddress(
       T("kernel32.dll"),
       T("GetNativeSystemInfo")
     );
@@ -1311,7 +1311,7 @@ namespace ce {
   eWow64 ceapi ceIsWow64(ulong ulPID)
   {
     typedef BOOL (WINAPI *PfnIsWow64Process)(HANDLE, PBOOL);
-    PfnIsWow64Process pfnIsWow64Process = (PfnIsWow64Process)CELibrary::ceGetRoutineAddressFast(
+    PfnIsWow64Process pfnIsWow64Process = (PfnIsWow64Process)CELibrary::ceQuickGetRoutineAddress(
       T("kernel32.dll"),
       T("IsWow64Process")
     );
@@ -1450,7 +1450,7 @@ namespace ce {
     return (ulong)-1;
   }
 
-  std::list<ulong> ceapi ceNameToPidA(const std::string ProcessName, ulong ulMaxProcessNumber)
+  std::list<ulong> ceapi ceNameToPidA(const std::string& ProcessName, ulong ulMaxProcessNumber)
   {
     std::list<ulong> l;
     l.clear();
@@ -1491,7 +1491,7 @@ namespace ce {
     return l;
   }
 
-  std::list<ulong> ceapi ceNameToPidW(const std::wstring ProcessName, ulong ulMaxProcessNumber)
+  std::list<ulong> ceapi ceNameToPidW(const std::wstring& ProcessName, ulong ulMaxProcessNumber)
   {
     std::list<ulong> l;
     l.clear();
@@ -1592,9 +1592,10 @@ namespace ce {
     return s;
   }
 
-  HMODULE ceapi ceRemoteGetModuleHandleA(ulong ulPID, const std::string ModuleName)
+  HMODULE ceapi ceRemoteGetModuleHandleA(ulong ulPID, const std::string& ModuleName)
   {
     HMODULE hModule = (HMODULE)-1;
+
     /*TModuleEntry32A me32 = {0};
 
     if (ceInitTlHelp32() != CE_OK) {
@@ -1656,7 +1657,7 @@ namespace ce {
     return (HMODULE)-1;
   }
 
-  HMODULE ceapi ceRemoteGetModuleHandleW(const ulong ulPID, const std::wstring ModuleName)
+  HMODULE ceapi ceRemoteGetModuleHandleW(const ulong ulPID, const std::wstring& ModuleName)
   {
     HMODULE hModule = (HMODULE)-1;
 
@@ -1700,7 +1701,7 @@ namespace ce {
 
   /* -------------------------------------------- File/Directory Working -------------------------------------------- */
 
-  bool ceapi ceDirectoryExistsA(const std::string Directory)
+  bool ceapi ceDirectoryExistsA(const std::string& Directory)
   {
     if (GetFileAttributesA(Directory.c_str()) == INVALID_FILE_ATTRIBUTES) {
       return false;
@@ -1709,7 +1710,7 @@ namespace ce {
     return true;
   }
 
-  bool ceapi ceDirectoryExistsW(const std::wstring Directory)
+  bool ceapi ceDirectoryExistsW(const std::wstring& Directory)
   {
     if (GetFileAttributesW(Directory.c_str()) == INVALID_FILE_ATTRIBUTES) {
       return false;
@@ -1718,7 +1719,7 @@ namespace ce {
     return true;
   }
 
-  std::string ceapi ceFileTypeA(const std::string FilePath)
+  std::string ceapi ceFileTypeA(const std::string& FilePath)
   {
     SHFILEINFOA SHINFO = {0};
     std::shared_ptr<char> szFileType(ceCfgSP(MAXBYTE, char));
@@ -1733,7 +1734,7 @@ namespace ce {
     return s;
   }
 
-  std::wstring ceapi ceFileTypeW(const std::wstring FilePath)
+  std::wstring ceapi ceFileTypeW(const std::wstring& FilePath)
   {
     SHFILEINFOW SHINFO = {0};
     std::shared_ptr<wchar> szFileType(ceCfgSP(MAXBYTE, wchar));
@@ -1748,7 +1749,7 @@ namespace ce {
     return s;
   }
 
-  bool ceapi ceFileExistsA(const std::string FilePath)
+  bool ceapi ceFileExistsA(const std::string& FilePath)
   {
     bool bResult = false;
     WIN32_FIND_DATAA wfd = {0};
@@ -1762,7 +1763,7 @@ namespace ce {
     return bResult;
   }
 
-  bool ceapi ceFileExistsW(const std::wstring FilePath)
+  bool ceapi ceFileExistsW(const std::wstring& FilePath)
   {
     bool bResult = false;
     WIN32_FIND_DATAW wfd = {0};
@@ -1776,7 +1777,7 @@ namespace ce {
     return bResult;
   }
 
-  std::string ceapi ceExtractFilePathA(const std::string FilePath, bool bIncludeSlash)
+  std::string ceapi ceExtractFilePathA(const std::string& FilePath, bool bIncludeSlash)
   {
     std::string filePath;
     filePath.clear();
@@ -1789,7 +1790,7 @@ namespace ce {
     return filePath;
   }
 
-  std::wstring ceapi ceExtractFilePathW(const std::wstring FilePath, bool bIncludeSlash)
+  std::wstring ceapi ceExtractFilePathW(const std::wstring& FilePath, bool bIncludeSlash)
   {
     std::wstring filePath;
     filePath.clear();
@@ -1802,7 +1803,7 @@ namespace ce {
     return filePath;
   }
 
-  std::string ceapi ceExtractFileNameA(const std::string FilePath, bool bIncludeExtension)
+  std::string ceapi ceExtractFileNameA(const std::string& FilePath, bool bIncludeExtension)
   {
     std::string fileName;
     fileName.clear();
@@ -1822,7 +1823,7 @@ namespace ce {
     return fileName;
   }
 
-  std::wstring ceapi ceExtractFileNameW(const std::wstring FilePath, bool bIncludeExtension)
+  std::wstring ceapi ceExtractFileNameW(const std::wstring& FilePath, bool bIncludeExtension)
   {
     std::wstring fileName;
     fileName.clear();
@@ -1996,7 +1997,7 @@ namespace ce {
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  CELibraryA::CELibraryA(const std::string ModuleName)
+  CELibraryA::CELibraryA(const std::string& ModuleName)
   {
     m_ModuleName = ModuleName;
     m_RoutineName.clear();
@@ -2004,7 +2005,7 @@ namespace ce {
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  CELibraryA::CELibraryA(const std::string ModuleName, const std::string RoutineName)
+  CELibraryA::CELibraryA(const std::string& ModuleName, const std::string& RoutineName)
   {
     m_ModuleName  = ModuleName;
     m_RoutineName = RoutineName;
@@ -2041,7 +2042,7 @@ namespace ce {
     return nullptr;
   }
 
-  void* ceapi CELibraryA::ceGetRoutineAddress(const std::string RoutineName)
+  void* ceapi CELibraryA::ceGetRoutineAddress(const std::string& RoutineName)
   {
     if (!m_ModuleName.empty() && !RoutineName.empty()) {
       return this->ceGetRoutineAddress(m_ModuleName, RoutineName);
@@ -2050,7 +2051,7 @@ namespace ce {
     return nullptr;
   }
 
-  void* ceapi CELibraryA::ceGetRoutineAddress(const std::string ModuleName, const std::string RoutineName)
+  void* ceapi CELibraryA::ceGetRoutineAddress(const std::string& ModuleName, const std::string& RoutineName)
   {
     HMODULE hmod = 0;
     if (!ModuleName.empty()) hmod = LoadLibraryA(ModuleName.c_str());
@@ -2066,7 +2067,7 @@ namespace ce {
     return p;
   }
 
-  void* ceapi CELibraryA::ceGetRoutineAddressFast(const std::string ModuleName, const std::string RoutineName)
+  void* ceapi CELibraryA::ceQuickGetRoutineAddress(const std::string& ModuleName, const std::string& RoutineName)
   {
     HMODULE hmod = 0;
     if (!ModuleName.empty()) hmod = LoadLibraryA(ModuleName.c_str());
@@ -2089,7 +2090,7 @@ namespace ce {
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  CELibraryW::CELibraryW(const std::wstring ModuleName)
+  CELibraryW::CELibraryW(const std::wstring& ModuleName)
   {
     m_ModuleName = ModuleName;
     m_RoutineName.clear();
@@ -2097,7 +2098,7 @@ namespace ce {
     m_LastErrorCode = GetLastError();
   }
 
-  CELibraryW::CELibraryW(const std::wstring ModuleName, const std::wstring RoutineName)
+  CELibraryW::CELibraryW(const std::wstring& ModuleName, const std::wstring& RoutineName)
   {
     m_ModuleName  = ModuleName;
     m_RoutineName = RoutineName;
@@ -2134,7 +2135,7 @@ namespace ce {
     return nullptr;
   }
 
-  void* ceapi CELibraryW::ceGetRoutineAddress(const std::wstring RoutineName)
+  void* ceapi CELibraryW::ceGetRoutineAddress(const std::wstring& RoutineName)
   {
     if (!m_ModuleName.empty() && !RoutineName.empty()) {
       return this->ceGetRoutineAddress(m_ModuleName, RoutineName);
@@ -2143,7 +2144,7 @@ namespace ce {
     return nullptr;
   }
 
-  void* ceapi CELibraryW::ceGetRoutineAddress(const std::wstring ModuleName, const std::wstring RoutineName)
+  void* ceapi CELibraryW::ceGetRoutineAddress(const std::wstring& ModuleName, const std::wstring& RoutineName)
   {
     HMODULE hmod = 0;
     if (!ModuleName.empty()) hmod = LoadLibraryW(ModuleName.c_str());
@@ -2160,7 +2161,7 @@ namespace ce {
     return p;
   }
 
-  void* ceapi CELibraryW::ceGetRoutineAddressFast(const std::wstring ModuleName, const std::wstring RoutineName)
+  void* ceapi CELibraryW::ceQuickGetRoutineAddress(const std::wstring& ModuleName, const std::wstring& RoutineName)
   {
     HMODULE hmod = 0;
     if (!ModuleName.empty()) hmod = LoadLibraryW(ModuleName.c_str());
@@ -2189,7 +2190,7 @@ namespace ce {
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  CESocket::CESocket(eSocketAF socketAF, eSocketType socketType)
+  CESocket::CESocket(eSocketAF socketAF, eSocketType SocketType)
   {
     m_Socket = INVALID_SOCKET;
 
@@ -2199,7 +2200,7 @@ namespace ce {
 
     m_LastErrorCode = ERROR_SUCCESS;
 
-    this->ceSocket(socketAF, socketType);
+    this->ceSocket(socketAF, SocketType);
   }
 
   CESocket::~CESocket() {}
@@ -2213,26 +2214,26 @@ namespace ce {
     return true;
   }
 
-  CEResult ceapi CESocket::ceSocket(eSocketAF socketAF, eSocketType socketType, eSocketProtocol socketProtocol)
+  CEResult ceapi CESocket::ceSocket(eSocketAF SocketAF, eSocketType SocketType, eSocketProtocol SocketProtocol)
   {
     if (WSAStartup(MAKEWORD(2, 2), &m_WSAData) != 0) {
       m_LastErrorCode = GetLastError();
       return 1;
     }
 
-    m_Socket = socket(socketAF, socketType, socketProtocol);
+    m_Socket = socket(SocketAF, SocketType, SocketProtocol);
     if (!this->ceIsSocketValid(m_Socket)) {
       return 2;
     }
 
-    m_Server.sin_family = socketAF;
+    m_Server.sin_family = SocketAF;
 
     return CE_OK;
   }
 
-  CEResult ceapi CESocket::ceBind(const TAccessPoint& accessPoint)
+  CEResult ceapi CESocket::ceBind(const TAccessPoint& AccessPoint)
   {
-    return this->ceBind(accessPoint.Host, accessPoint.Port);
+    return this->ceBind(AccessPoint.Host, AccessPoint.Port);
   }
 
   CEResult ceapi CESocket::ceBind(const std::string& Address, unsigned short usPort)
@@ -2333,23 +2334,23 @@ namespace ce {
     return CE_OK;
   }
 
-  IResult ceapi CESocket::ceSend(const char* lpData, int iLength, eSocketMessage msg)
+  IResult ceapi CESocket::ceSend(const char* lpData, int iLength, eSocketMessage SocketMessage)
   {
-    return this->ceSend(m_Socket, lpData, iLength, msg);
+    return this->ceSend(m_Socket, lpData, iLength, SocketMessage);
   }
 
-  IResult ceapi CESocket::ceSend(const CEBinary& Data, eSocketMessage msg)
+  IResult ceapi CESocket::ceSend(const CEBinary& Data, eSocketMessage SocketMessage)
   {
-    return this->ceSend(m_Socket, (const char*)Data.GetpData(), Data.GetUsedSize(), msg);
+    return this->ceSend(m_Socket, (const char*)Data.GetpData(), Data.GetUsedSize(), SocketMessage);
   }
 
-  IResult ceapi CESocket::ceSend(SOCKET socket, const char* lpData, int iLength, eSocketMessage msg)
+  IResult ceapi CESocket::ceSend(SOCKET socket, const char* lpData, int iLength, eSocketMessage SocketMessage)
   {
     if (!this->ceIsSocketValid(socket)) {
       return SOCKET_ERROR;
     }
 
-    IResult z = send(socket, lpData, iLength, msg);
+    IResult z = send(socket, lpData, iLength, SocketMessage);
     if (z == SOCKET_ERROR) {
       m_LastErrorCode = GetLastError();
     }
@@ -2357,26 +2358,26 @@ namespace ce {
     return z;
   }
 
-  IResult ceapi CESocket::ceRecv(char* lpData, int iLength, eSocketMessage msg)
+  IResult ceapi CESocket::ceRecv(char* lpData, int iLength, eSocketMessage SocketMessage)
   {
-    return this->ceRecv(m_Socket, lpData, iLength, msg);
+    return this->ceRecv(m_Socket, lpData, iLength, SocketMessage);
   }
 
-  IResult ceapi CESocket::ceRecv(CEBinary& Data, eSocketMessage msg)
+  IResult ceapi CESocket::ceRecv(CEBinary& Data, eSocketMessage SocketMessage)
   {
     void* p = Data.GetpData();
-    auto z = this->ceRecv(m_Socket, (char*)p, Data.GetSize(), msg);
+    auto z = this->ceRecv(m_Socket, (char*)p, Data.GetSize(), SocketMessage);
     Data.SetUsedSize(z);
     return z;
   }
 
-  IResult ceapi CESocket::ceRecv(SOCKET socket, char* lpData, int iLength, eSocketMessage msg)
+  IResult ceapi CESocket::ceRecv(SOCKET socket, char* lpData, int iLength, eSocketMessage SocketMessage)
   {
     if (!this->ceIsSocketValid(socket)) {
       return SOCKET_ERROR;
     }
 
-    IResult z = recv(socket, lpData, iLength, msg);
+    IResult z = recv(socket, lpData, iLength, SocketMessage);
     if (z == SOCKET_ERROR) {
       m_LastErrorCode = GetLastError();
     }
@@ -2395,7 +2396,14 @@ namespace ce {
       return SOCKET_ERROR;
     }
 
-    IResult z = sendto(m_Socket, lpData, iLength, 0, (const struct sockaddr*)&SocketInformation.sai, sizeof(SocketInformation.sai));
+    IResult z = sendto(
+      m_Socket,
+      lpData,
+      iLength,
+      0,
+      (const struct sockaddr*)&SocketInformation.sai,
+      sizeof(SocketInformation.sai)
+    );
     if (z == SOCKET_ERROR) {
       m_LastErrorCode = GetLastError();
     }
@@ -2757,7 +2765,7 @@ namespace ce {
 
     // The allocated address must be not too far with the target (Better is in image process address)
     // pOldProc is a trampoline function
-    //VirtualAlloc(nullptr, iTrampolineSize + sizeof(TRedirect), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    // VirtualAlloc(nullptr, iTrampolineSize + sizeof(TRedirect), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     *pOldProc = (void*)IBH::AllocateBuffer(pProc);
     if (*pOldProc == nullptr) {
       return false;
@@ -2832,13 +2840,13 @@ namespace ce {
   }
 
   bool ceapi CEDynHookA::ceAPIAttach(
-    const std::string ModuleName,
-    const std::string ProcName,
+    const std::string& ModuleName,
+    const std::string& ProcName,
     void* lpHookProc,
     void** lpOldProc
   )
   {
-    void* lpProc = CELibraryA::ceGetRoutineAddressFast(ModuleName, ProcName);
+    void* lpProc = CELibraryA::ceQuickGetRoutineAddress(ModuleName, ProcName);
     if (lpProc == nullptr) {
       return false;
     }
@@ -2848,14 +2856,14 @@ namespace ce {
     return m_Hooked;
   }
 
-  bool ceapi CEDynHookA::ceAPIDetach(const std::string ModuleName, const std::string ProcName, void** lpOldProc
+  bool ceapi CEDynHookA::ceAPIDetach(const std::string& ModuleName, const std::string& ProcName, void** lpOldProc
   )
   {
     if (!m_Hooked) {
       return false;
     }
 
-    void* lpProc = CELibraryA::ceGetRoutineAddressFast(ModuleName, ProcName);
+    void* lpProc = CELibraryA::ceQuickGetRoutineAddress(ModuleName, ProcName);
     if (lpProc == nullptr) {
       return false;
     }
@@ -2864,13 +2872,13 @@ namespace ce {
   }
 
   bool ceapi CEDynHookW::ceAPIAttach(
-    const std::wstring ModuleName,
-    const std::wstring ProcName,
+    const std::wstring& ModuleName,
+    const std::wstring& ProcName,
     void* lpHookProc,
     void** lpOldProc
     )
   {
-    void* lpProc = CELibraryW::ceGetRoutineAddressFast(ModuleName, ProcName);
+    void* lpProc = CELibraryW::ceQuickGetRoutineAddress(ModuleName, ProcName);
     if (lpProc == nullptr) {
       return false;
     }
@@ -2880,13 +2888,13 @@ namespace ce {
     return m_Hooked;
   }
 
-  bool ceapi CEDynHookW::ceAPIDetach(const std::wstring ModuleName, const std::wstring ProcName, void** lpOldProc)
+  bool ceapi CEDynHookW::ceAPIDetach(const std::wstring& ModuleName, const std::wstring& ProcName, void** lpOldProc)
   {
     if (!m_Hooked) {
       return false;
     }
 
-    void* lpProc = CELibraryW::ceGetRoutineAddressFast(ModuleName, ProcName);
+    void* lpProc = CELibraryW::ceQuickGetRoutineAddress(ModuleName, ProcName);
     if (lpProc == nullptr) {
       return false;
     }
@@ -2911,7 +2919,7 @@ namespace ce {
     this->ceClose();
   }
 
-  CEResult ceapi CEFileMappingA::ceInit(const std::string FileName, eFileGenericFlags fgFlag, eFileShareFlags fsFlag)
+  CEResult ceapi CEFileMappingA::ceInit(const std::string& FileName, eFileGenericFlags fgFlag, eFileShareFlags fsFlag)
   {
     if (FileName.empty()) {
       return 1;
@@ -2930,7 +2938,7 @@ namespace ce {
     return CE_OK;
   }
 
-  CEResult ceapi CEFileMappingA::ceCreate(const std::string MapName, ulong ulMaxSizeHigh, ulong ulMaxSizeLow)
+  CEResult ceapi CEFileMappingA::ceCreate(const std::string& MapName, ulong ulMaxSizeHigh, ulong ulMaxSizeLow)
   {
     if (MapName.empty()) {
       return 1;
@@ -2958,7 +2966,7 @@ namespace ce {
     return CE_OK;
   }
 
-  CEResult ceapi CEFileMappingA::ceOpen(const std::string MapName, bool bInheritHandle)
+  CEResult ceapi CEFileMappingA::ceOpen(const std::string& MapName, bool bInheritHandle)
   {
     if (MapName.empty()) {
       return 1;
@@ -3067,7 +3075,7 @@ namespace ce {
   }
 
   CEResult ceapi CEFileMappingW::ceCreate(
-    const std::wstring MapName,
+    const std::wstring& MapName,
     ulong ulMaxSizeHigh,
     ulong ulMaxSizeLow
   )
@@ -3098,7 +3106,7 @@ namespace ce {
     return CE_OK;
   }
 
-  CEResult ceapi CEFileMappingW::ceOpen(const std::wstring MapName, bool bInheritHandle)
+  CEResult ceapi CEFileMappingW::ceOpen(const std::wstring& MapName, bool bInheritHandle)
   {
     if (MapName.empty()) {
       return 1;
@@ -3173,12 +3181,12 @@ namespace ce {
 
   // ANSI Version
 
-  CEIniFileA::CEIniFileA(const std::string FilePath)
+  CEIniFileA::CEIniFileA(const std::string& FilePath)
   {
     m_FilePath = FilePath;
   }
 
-  CEIniFileA::CEIniFileA(const std::string FilePath, const std::string Section)
+  CEIniFileA::CEIniFileA(const std::string& FilePath, const std::string& Section)
   {
     m_FilePath = FilePath;
     m_Section  = Section;
@@ -3194,12 +3202,12 @@ namespace ce {
     }
   }
 
-  void CEIniFileA::ceSetCurrentFilePath(const std::string FilePath)
+  void CEIniFileA::ceSetCurrentFilePath(const std::string& FilePath)
   {
     m_FilePath = FilePath;
   }
 
-  void CEIniFileA::ceSetCurrentSection(const std::string Section)
+  void CEIniFileA::ceSetCurrentSection(const std::string& Section)
   {
     m_Section = Section;
   }
@@ -3232,7 +3240,7 @@ namespace ce {
     return l;
   }
 
-  std::list<std::string> ceapi CEIniFileA::ceReadSection(const std::string Section, ulong ulMaxSize)
+  std::list<std::string> ceapi CEIniFileA::ceReadSection(const std::string& Section, ulong ulMaxSize)
   {
     std::list<std::string> l;
     l.clear();
@@ -3258,7 +3266,7 @@ namespace ce {
     return l;
   }
 
-  int ceapi CEIniFileA::ceReadInteger(const std::string Section, const std::string Key, int Default)
+  int ceapi CEIniFileA::ceReadInteger(const std::string& Section, const std::string& Key, int Default)
   {
     this->ceValidFilePath();
     uint result = GetPrivateProfileIntA(Section.c_str(), Key.c_str(), Default, m_FilePath.c_str());
@@ -3266,7 +3274,7 @@ namespace ce {
     return result;
   }
 
-  bool ceapi CEIniFileA::ceReadBool(const std::string Section, const std::string Key, bool Default)
+  bool ceapi CEIniFileA::ceReadBool(const std::string& Section, const std::string& Key, bool Default)
   {
     this->ceValidFilePath();
     bool result = (GetPrivateProfileIntA(Section.c_str(), Key.c_str(), Default, m_FilePath.c_str()) == 1 ? true : false);
@@ -3274,7 +3282,7 @@ namespace ce {
     return result;
   }
 
-  float ceapi CEIniFileA::ceReadFloat(const std::string Section, const std::string Key, float Default)
+  float ceapi CEIniFileA::ceReadFloat(const std::string& Section, const std::string& Key, float Default)
   {
     const std::string sDefault = ceNumberToStringA(Default);
     char lpszResult[MAX_SIZE];
@@ -3290,7 +3298,11 @@ namespace ce {
     return (float)atof(lpszResult);
   }
 
-  std::string ceapi CEIniFileA::ceReadString(const std::string Section, const std::string Key, const std::string Default)
+  std::string ceapi CEIniFileA::ceReadString(
+    const std::string& Section,
+    const std::string& Key,
+    const std::string& Default
+  )
   {
     std::string s;
     s.clear();
@@ -3323,7 +3335,7 @@ namespace ce {
     return s;
   }
 
-  std::shared_ptr<uchar> ceapi CEIniFileA::ceReadStruct(const std::string Section, const std::string Key, ulong ulSize)
+  std::shared_ptr<uchar> ceapi CEIniFileA::ceReadStruct(const std::string& Section, const std::string& Key, ulong ulSize)
   {
     std::shared_ptr<uchar> p(ceCfgSP(ulSize, uchar));
     if (p == nullptr) {
@@ -3349,34 +3361,34 @@ namespace ce {
     return this->ceReadSection(m_Section, ulMaxSize);
   }
 
-  int ceapi CEIniFileA::ceReadInteger(const std::string Key, int Default)
+  int ceapi CEIniFileA::ceReadInteger(const std::string& Key, int Default)
   {
     return this->ceReadInteger(m_Section, Key, Default);
   }
 
-  bool ceapi CEIniFileA::ceReadBool(const std::string Key, bool Default)
+  bool ceapi CEIniFileA::ceReadBool(const std::string& Key, bool Default)
   {
     return this->ceReadBool(m_Section, Key, Default);
   }
 
-  float ceapi CEIniFileA::ceReadFloat(const std::string Key, float Default)
+  float ceapi CEIniFileA::ceReadFloat(const std::string& Key, float Default)
   {
     return this->ceReadFloat(m_Section, Key, Default);
   }
 
-  std::string ceapi CEIniFileA::ceReadString(const std::string Key, const std::string Default)
+  std::string ceapi CEIniFileA::ceReadString(const std::string& Key, const std::string& Default)
   {
     return this->ceReadString(m_Section, Key, Default);
   }
 
-  std::shared_ptr<uchar> ceapi CEIniFileA::ceReadStruct(const std::string Key, ulong ulSize)
+  std::shared_ptr<uchar> ceapi CEIniFileA::ceReadStruct(const std::string& Key, ulong ulSize)
   {
     return this->ceReadStruct(m_Section, Key, ulSize);
   }
 
   // Long-Write
 
-  bool ceapi CEIniFileA::ceWriteInteger(const std::string Section, const std::string Key, int Value)
+  bool ceapi CEIniFileA::ceWriteInteger(const std::string& Section, const std::string& Key, int Value)
   {
     this->ceValidFilePath();
     const std::string s = ceNumberToStringA(Value);
@@ -3385,7 +3397,7 @@ namespace ce {
     return result;
   }
 
-  bool ceapi CEIniFileA::ceWriteBool(const std::string Section, const std::string Key, bool Value)
+  bool ceapi CEIniFileA::ceWriteBool(const std::string& Section, const std::string& Key, bool Value)
   {
     this->ceValidFilePath();
     const std::string s(Value ? "1" : "0");
@@ -3394,7 +3406,7 @@ namespace ce {
     return result;
   }
 
-  bool ceapi CEIniFileA::ceWriteFloat(const std::string Section, const std::string Key, float Value)
+  bool ceapi CEIniFileA::ceWriteFloat(const std::string& Section, const std::string& Key, float Value)
   {
     this->ceValidFilePath();
     const std::string s = ceNumberToStringA(Value);
@@ -3403,7 +3415,7 @@ namespace ce {
     return result;
   }
 
-  bool ceapi CEIniFileA::ceWriteString(const std::string Section, const std::string Key, const std::string Value)
+  bool ceapi CEIniFileA::ceWriteString(const std::string& Section, const std::string& Key, const std::string& Value)
   {
     this->ceValidFilePath();
     bool result = (WritePrivateProfileStringA(Section.c_str(), Key.c_str(), Value.c_str(), m_FilePath.c_str()) != 0);
@@ -3411,7 +3423,7 @@ namespace ce {
     return result;
   }
 
-  bool ceapi CEIniFileA::ceWriteStruct(const std::string Section, const std::string Key, void * pStruct, ulong ulSize)
+  bool ceapi CEIniFileA::ceWriteStruct(const std::string& Section, const std::string& Key, void* pStruct, ulong ulSize)
   {
     this->ceValidFilePath();
     bool result = (WritePrivateProfileStructA(Section.c_str(), Key.c_str(), pStruct, ulSize, m_FilePath.c_str()) != 0);
@@ -3421,41 +3433,41 @@ namespace ce {
 
   // Short-Write
 
-  bool ceapi CEIniFileA::ceWriteInteger(const std::string Key, int Value)
+  bool ceapi CEIniFileA::ceWriteInteger(const std::string& Key, int Value)
   {
     return this->ceWriteInteger(m_Section, Key, Value);
   }
 
-  bool ceapi CEIniFileA::ceWriteBool(const std::string Key, bool Value)
+  bool ceapi CEIniFileA::ceWriteBool(const std::string& Key, bool Value)
   {
     return this->ceWriteBool(m_Section, Key, Value);
   }
 
-  bool ceapi CEIniFileA::ceWriteFloat(const std::string Key, float Value)
+  bool ceapi CEIniFileA::ceWriteFloat(const std::string& Key, float Value)
   {
     return this->ceWriteFloat(m_Section, Key, Value);
   }
 
-  bool ceapi CEIniFileA::ceWriteString(const std::string Key, const std::string Value)
+  bool ceapi CEIniFileA::ceWriteString(const std::string& Key, const std::string& Value)
   {
     return this->ceWriteString(m_Section, Key, Value);
   }
 
-  bool ceapi CEIniFileA::ceWriteStruct(const std::string Key, void * pStruct, ulong ulSize)
+  bool ceapi CEIniFileA::ceWriteStruct(const std::string& Key, void* pStruct, ulong ulSize)
   {
     return this->ceWriteStruct(m_Section, Key, pStruct, ulSize);
   }
 
   // UNICODE Version
 
-  CEIniFileW::CEIniFileW(const std::wstring FilePath)
+  CEIniFileW::CEIniFileW(const std::wstring& FilePath)
   {
     m_FilePath = FilePath;
 
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  CEIniFileW::CEIniFileW(const std::wstring FilePath, const std::wstring Section)
+  CEIniFileW::CEIniFileW(const std::wstring& FilePath, const std::wstring& Section)
   {
     m_FilePath = FilePath;
     m_Section  = Section;
@@ -3473,12 +3485,12 @@ namespace ce {
     }
   }
 
-  void CEIniFileW::ceSetCurrentFilePath(const std::wstring FilePath)
+  void CEIniFileW::ceSetCurrentFilePath(const std::wstring& FilePath)
   {
     m_FilePath = FilePath;
   }
 
-  void CEIniFileW::ceSetCurrentSection(const std::wstring Section)
+  void CEIniFileW::ceSetCurrentSection(const std::wstring& Section)
   {
     m_Section = Section;
   }
@@ -3511,7 +3523,7 @@ namespace ce {
     return l;
   }
 
-  std::list<std::wstring> ceapi CEIniFileW::ceReadSection(const std::wstring Section, ulong ulMaxSize)
+  std::list<std::wstring> ceapi CEIniFileW::ceReadSection(const std::wstring& Section, ulong ulMaxSize)
   {
     std::list<std::wstring> l;
     l.clear();
@@ -3537,7 +3549,7 @@ namespace ce {
     return l;
   }
 
-  int ceapi CEIniFileW::ceReadInteger(const std::wstring Section, const std::wstring Key, int Default)
+  int ceapi CEIniFileW::ceReadInteger(const std::wstring& Section, const std::wstring& Key, int Default)
   {
     this->ceValidFilePath();
     int result = GetPrivateProfileIntW(Section.c_str(), Key.c_str(), Default, m_FilePath.c_str());
@@ -3545,7 +3557,7 @@ namespace ce {
     return result;
   }
 
-  bool ceapi CEIniFileW::ceReadBool(const std::wstring Section, const std::wstring Key, bool Default)
+  bool ceapi CEIniFileW::ceReadBool(const std::wstring& Section, const std::wstring& Key, bool Default)
   {
     this->ceValidFilePath();
     bool result = (GetPrivateProfileIntW(Section.c_str(), Key.c_str(), Default, m_FilePath.c_str()) == 1 ? true : false);
@@ -3553,7 +3565,7 @@ namespace ce {
     return result;
   }
 
-  float ceapi CEIniFileW::ceReadFloat(const std::wstring Section, const std::wstring Key, float Default)
+  float ceapi CEIniFileW::ceReadFloat(const std::wstring& Section, const std::wstring& Key, float Default)
   {
     this->ceValidFilePath();
 
@@ -3562,7 +3574,14 @@ namespace ce {
 
     ZeroMemory(lpwszResult, sizeof(lpwszResult));
 
-    GetPrivateProfileStringW(Section.c_str(), Key.c_str(), sDefault.c_str(), lpwszResult, sizeof(lpwszResult), m_FilePath.c_str());
+    GetPrivateProfileStringW(
+      Section.c_str(),
+      Key.c_str(),
+      sDefault.c_str(),
+      lpwszResult,
+      sizeof(lpwszResult),
+      m_FilePath.c_str()
+    );
 
     m_LastErrorCode = GetLastError();
 
@@ -3571,7 +3590,11 @@ namespace ce {
     return (float)atof(s.c_str());
   }
 
-  std::wstring ceapi CEIniFileW::ceReadString(const std::wstring Section, const std::wstring Key, const std::wstring Default)
+  std::wstring ceapi CEIniFileW::ceReadString(
+    const std::wstring& Section,
+    const std::wstring& Key,
+    const std::wstring& Default
+  )
   {
     std::wstring s;
     s.clear();
@@ -3603,7 +3626,11 @@ namespace ce {
     return s;
   }
 
-  std::shared_ptr<uchar> ceapi CEIniFileW::ceReadStruct(const std::wstring Section, const std::wstring Key, ulong ulSize)
+  std::shared_ptr<uchar> ceapi CEIniFileW::ceReadStruct(
+    const std::wstring& Section,
+    const std::wstring& Key,
+    ulong ulSize
+  )
   {
     std::shared_ptr<uchar> p(ceCfgSP(ulSize, uchar));
     if (p == nullptr) {
@@ -3629,34 +3656,34 @@ namespace ce {
     return this->ceReadSection(m_Section, ulMaxSize);
   }
 
-  int ceapi CEIniFileW::ceReadInteger(const std::wstring Key, int Default)
+  int ceapi CEIniFileW::ceReadInteger(const std::wstring& Key, int Default)
   {
     return this->ceReadInteger(m_Section, Key, Default);
   }
 
-  bool ceapi CEIniFileW::ceReadBool(const std::wstring Key, bool Default)
+  bool ceapi CEIniFileW::ceReadBool(const std::wstring& Key, bool Default)
   {
     return this->ceReadBool(m_Section, Key, Default);
   }
 
-  float ceapi CEIniFileW::ceReadFloat(const std::wstring Key, float Default)
+  float ceapi CEIniFileW::ceReadFloat(const std::wstring& Key, float Default)
   {
     return this->ceReadFloat(m_Section, Key, Default);
   }
 
-  std::wstring ceapi CEIniFileW::ceReadString(const std::wstring Key, const std::wstring Default)
+  std::wstring ceapi CEIniFileW::ceReadString(const std::wstring& Key, const std::wstring& Default)
   {
     return this->ceReadString(m_Section, Key, Default);
   }
 
-  std::shared_ptr<uchar> ceapi CEIniFileW::ceReadStruct(const std::wstring Key, ulong ulSize)
+  std::shared_ptr<uchar> ceapi CEIniFileW::ceReadStruct(const std::wstring& Key, ulong ulSize)
   {
     return this->ceReadStruct(m_Section, Key, ulSize);
   }
 
   // Long-Write
 
-  bool ceapi CEIniFileW::ceWriteInteger(const std::wstring Section, const std::wstring Key, int Value)
+  bool ceapi CEIniFileW::ceWriteInteger(const std::wstring& Section, const std::wstring& Key, int Value)
   {
     this->ceValidFilePath();
     const std::wstring s = ceNumberToStringW(Value);
@@ -3665,14 +3692,14 @@ namespace ce {
     return result;
   }
 
-  bool ceapi CEIniFileW::ceWriteBool(const std::wstring Section, const std::wstring Key, bool Value)
+  bool ceapi CEIniFileW::ceWriteBool(const std::wstring& Section, const std::wstring& Key, bool Value)
   {
     this->ceValidFilePath();
     const std::wstring s(Value ? L"1" : L"0");
     return (WritePrivateProfileStringW(Section.c_str(), Key.c_str(), s.c_str(), m_FilePath.c_str()) != 0);
   }
 
-  bool ceapi CEIniFileW::ceWriteFloat(const std::wstring Section, const std::wstring Key, float Value)
+  bool ceapi CEIniFileW::ceWriteFloat(const std::wstring& Section, const std::wstring& Key, float Value)
   {
     this->ceValidFilePath();
     const std::wstring s = ceNumberToStringW(Value);
@@ -3681,7 +3708,7 @@ namespace ce {
     return result;
   }
 
-  bool ceapi CEIniFileW::ceWriteString(const std::wstring Section, const std::wstring Key, const std::wstring Value)
+  bool ceapi CEIniFileW::ceWriteString(const std::wstring& Section, const std::wstring& Key, const std::wstring& Value)
   {
     this->ceValidFilePath();
     bool result = (WritePrivateProfileStringW(Section.c_str(), Key.c_str(), Value.c_str(), m_FilePath.c_str()) != 0);
@@ -3689,7 +3716,12 @@ namespace ce {
     return result;
   }
 
-  bool ceapi CEIniFileW::ceWriteStruct(const std::wstring Section, const std::wstring Key, void * pStruct, ulong ulSize)
+  bool ceapi CEIniFileW::ceWriteStruct(
+    const std::wstring& Section,
+    const std::wstring& Key,
+    void* pStruct,
+    ulong ulSize
+  )
   {
     this->ceValidFilePath();
     bool result = (WritePrivateProfileStructW(Section.c_str(), Key.c_str(), pStruct, ulSize, m_FilePath.c_str()) != 0);
@@ -3699,27 +3731,27 @@ namespace ce {
 
   // Short-Write
 
-  bool ceapi CEIniFileW::ceWriteInteger(const std::wstring Key, int Value)
+  bool ceapi CEIniFileW::ceWriteInteger(const std::wstring& Key, int Value)
   {
     return this->ceWriteInteger(m_Section.c_str(), Key.c_str(), Value);
   }
 
-  bool ceapi CEIniFileW::ceWriteBool(const std::wstring Key, bool Value)
+  bool ceapi CEIniFileW::ceWriteBool(const std::wstring& Key, bool Value)
   {
     return this->ceWriteBool(m_Section.c_str(), Key.c_str(), Value);
   }
 
-  bool ceapi CEIniFileW::ceWriteFloat(const std::wstring Key, float Value)
+  bool ceapi CEIniFileW::ceWriteFloat(const std::wstring& Key, float Value)
   {
     return this->ceWriteFloat(m_Section.c_str(), Key.c_str(), Value);
   }
 
-  bool ceapi CEIniFileW::ceWriteString(const std::wstring Key, const std::wstring Value)
+  bool ceapi CEIniFileW::ceWriteString(const std::wstring& Key, const std::wstring& Value)
   {
     return this->ceWriteString(m_Section.c_str(), Key.c_str(), Value);
   }
 
-  bool ceapi CEIniFileW::ceWriteStruct(const std::wstring Key, void * pStruct, ulong ulSize)
+  bool ceapi CEIniFileW::ceWriteStruct(const std::wstring& Key, void* pStruct, ulong ulSize)
   {
     return this->ceWriteStruct(m_Section.c_str(), Key.c_str(), pStruct, ulSize);
   }
@@ -3801,7 +3833,7 @@ namespace ce {
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  CERegistryA::CERegistryA(eRegRoot RegRoot, const std::string SubKey)
+  CERegistryA::CERegistryA(eRegRoot RegRoot, const std::string& SubKey)
   {
     m_HKRootKey = (HKEY)RegRoot;
     m_HKSubKey = NULL;
@@ -3810,7 +3842,7 @@ namespace ce {
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  ulong ceapi CERegistryA::ceGetSizeOfMultiString(const char * lpcszMultiString)
+  ulong ceapi CERegistryA::ceGetSizeOfMultiString(const char* lpcszMultiString)
   {
     ulong ulLength = 0;
 
@@ -3823,7 +3855,7 @@ namespace ce {
     return ulLength;
   }
 
-  ulong ceapi CERegistryA::ceGetDataSize(const std::string ValueName, ulong ulType)
+  ulong ceapi CERegistryA::ceGetDataSize(const std::string& ValueName, ulong ulType)
   {
     ulong ulDataSize = 0;
 
@@ -3840,7 +3872,7 @@ namespace ce {
     return this->ceCreateKey(m_SubKey);
   }
 
-  bool ceapi CERegistryA::ceCreateKey(const std::string SubKey)
+  bool ceapi CERegistryA::ceCreateKey(const std::string& SubKey)
   {
     m_LastErrorCode = RegCreateKeyA(m_HKRootKey, SubKey.c_str(), &m_HKSubKey);
     return (m_LastErrorCode == ERROR_SUCCESS);
@@ -3851,7 +3883,7 @@ namespace ce {
     return this->ceKeyExists(m_SubKey);
   }
 
-  bool ceapi CERegistryA::ceKeyExists(const std::string SubKey)
+  bool ceapi CERegistryA::ceKeyExists(const std::string& SubKey)
   {
     m_LastErrorCode = RegOpenKeyA(m_HKRootKey, SubKey.c_str(), &m_HKSubKey);
     return (m_LastErrorCode == ERROR_SUCCESS);
@@ -3862,7 +3894,7 @@ namespace ce {
     return this->ceOpenKey(m_SubKey, RegAccess);
   }
 
-  bool ceapi CERegistryA::ceOpenKey(const std::string SubKey, eRegAccess RegAccess)
+  bool ceapi CERegistryA::ceOpenKey(const std::string& SubKey, eRegAccess RegAccess)
   {
     m_LastErrorCode = RegOpenKeyExA(m_HKRootKey, SubKey.c_str(), 0, (REGSAM)RegAccess, &m_HKSubKey);
     return (m_LastErrorCode == ERROR_SUCCESS);
@@ -3873,7 +3905,7 @@ namespace ce {
     return this->ceDeleteKey(m_SubKey);
   }
 
-  bool ceapi CERegistryA::ceDeleteKey(const std::string SubKey)
+  bool ceapi CERegistryA::ceDeleteKey(const std::string& SubKey)
   {
     if (m_HKRootKey == 0) {
       return false;
@@ -3884,7 +3916,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryA::ceDeleteValue(const std::string Value)
+  bool ceapi CERegistryA::ceDeleteValue(const std::string& Value)
   {
     if (m_HKSubKey == 0) {
       return false;
@@ -4000,7 +4032,7 @@ namespace ce {
 
   // Write
 
-  bool ceapi CERegistryA::ceWriteInteger(const std::string ValueName, int Value)
+  bool ceapi CERegistryA::ceWriteInteger(const std::string& ValueName, int Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4013,7 +4045,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryA::ceWriteBool(const std::string ValueName, bool Value)
+  bool ceapi CERegistryA::ceWriteBool(const std::string& ValueName, bool Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4026,7 +4058,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryA::ceWriteFloat(const std::string ValueName, float Value)
+  bool ceapi CERegistryA::ceWriteFloat(const std::string& ValueName, float Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4042,7 +4074,7 @@ namespace ce {
   // For REG_SZ, REG_MULTI_SZ and REG_EXPAND_SZ:
   // https://msdn.microsoft.com/en-us/library/windows/desktop/ms724884(v=vs.85).aspx
 
-  bool ceapi CERegistryA::ceWriteString(const std::string ValueName, const std::string Value)
+  bool ceapi CERegistryA::ceWriteString(const std::string& ValueName, const std::string& Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4062,7 +4094,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryA::ceWriteMultiString(const std::string ValueName, const char * lpValue)
+  bool ceapi CERegistryA::ceWriteMultiString(const std::string& ValueName, const char* lpValue)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4082,13 +4114,13 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryA::ceWriteMultiString(const std::string ValueName, const std::list<std::string> Value)
+  bool ceapi CERegistryA::ceWriteMultiString(const std::string& ValueName, const std::list<std::string>& Value)
   {
     std::shared_ptr<char> p = ceListToMultiStringA(Value);
     return this->ceWriteMultiString(ValueName, p.get());
   }
 
-  bool ceapi CERegistryA::ceWriteExpandString(const std::string ValueName, const std::string Value)
+  bool ceapi CERegistryA::ceWriteExpandString(const std::string& ValueName, const std::string& Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4108,7 +4140,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryA::ceWriteBinary(const std::string ValueName, void * lpData, ulong ulSize)
+  bool ceapi CERegistryA::ceWriteBinary(const std::string& ValueName, void* lpData, ulong ulSize)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4123,7 +4155,7 @@ namespace ce {
 
   // Read
 
-  int ceapi CERegistryA::ceReadInteger(const std::string ValueName, int Default)
+  int ceapi CERegistryA::ceReadInteger(const std::string& ValueName, int Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4142,7 +4174,7 @@ namespace ce {
     return ret;
   }
 
-  bool ceapi CERegistryA::ceReadBool(const std::string ValueName, bool Default)
+  bool ceapi CERegistryA::ceReadBool(const std::string& ValueName, bool Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4161,7 +4193,7 @@ namespace ce {
     return ret;
   }
 
-  float ceapi CERegistryA::ceReadFloat(const std::string ValueName, float Default)
+  float ceapi CERegistryA::ceReadFloat(const std::string& ValueName, float Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4180,7 +4212,7 @@ namespace ce {
     return ret;
   }
 
-  std::string ceapi CERegistryA::ceReadString(const std::string ValueName, const std::string Default)
+  std::string ceapi CERegistryA::ceReadString(const std::string& ValueName, const std::string& Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4212,7 +4244,10 @@ namespace ce {
     return s;
   }
 
-  std::list<std::string> ceapi CERegistryA::ceReadMultiString(const std::string ValueName, std::list<std::string> Default)
+  std::list<std::string> ceapi CERegistryA::ceReadMultiString(
+    const std::string& ValueName,
+    std::list<std::string> Default
+  )
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4244,7 +4279,7 @@ namespace ce {
     return l;
   }
 
-  std::string ceapi CERegistryA::ceReadExpandString(const std::string ValueName, const std::string Default)
+  std::string ceapi CERegistryA::ceReadExpandString(const std::string& ValueName, const std::string& Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4276,7 +4311,7 @@ namespace ce {
     return s;
   }
 
-  std::shared_ptr<uchar> ceapi CERegistryA::ceReadBinary(const std::string ValueName, const void * pDefault)
+  std::shared_ptr<uchar> ceapi CERegistryA::ceReadBinary(const std::string& ValueName, const void* pDefault)
   {
     std::shared_ptr<uchar> pDef((uchar*)pDefault);
 
@@ -4329,7 +4364,7 @@ namespace ce {
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  CERegistryW::CERegistryW(eRegRoot RegRoot, const std::wstring SubKey)
+  CERegistryW::CERegistryW(eRegRoot RegRoot, const std::wstring& SubKey)
   {
     m_HKRootKey = (HKEY)RegRoot;
     m_HKSubKey = NULL;
@@ -4338,7 +4373,7 @@ namespace ce {
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  ulong ceapi CERegistryW::ceGetSizeOfMultiString(const wchar * lpcwszMultiString)
+  ulong ceapi CERegistryW::ceGetSizeOfMultiString(const wchar* lpcwszMultiString)
   {
     ulong ulLength = 0;
 
@@ -4351,7 +4386,7 @@ namespace ce {
     return ulLength;
   }
 
-  ulong ceapi CERegistryW::ceGetDataSize(const std::wstring ValueName, ulong ulType)
+  ulong ceapi CERegistryW::ceGetDataSize(const std::wstring& ValueName, ulong ulType)
   {
     ulong ulDataSize = 0;
 
@@ -4368,7 +4403,7 @@ namespace ce {
     return this->ceCreateKey(m_SubKey);
   }
 
-  bool ceapi CERegistryW::ceCreateKey(const std::wstring SubKey)
+  bool ceapi CERegistryW::ceCreateKey(const std::wstring& SubKey)
   {
     m_LastErrorCode = RegCreateKeyW(m_HKRootKey, SubKey.c_str(), &m_HKRootKey);
     return (m_LastErrorCode == ERROR_SUCCESS);
@@ -4379,7 +4414,7 @@ namespace ce {
     return this->ceKeyExists(m_SubKey);
   }
 
-  bool ceapi CERegistryW::ceKeyExists(const std::wstring SubKey)
+  bool ceapi CERegistryW::ceKeyExists(const std::wstring& SubKey)
   {
     m_LastErrorCode = RegOpenKeyW(m_HKRootKey, SubKey.c_str(), &m_HKSubKey);
     return (m_LastErrorCode == ERROR_SUCCESS);
@@ -4390,7 +4425,7 @@ namespace ce {
     return this->ceOpenKey(m_SubKey, RegAccess);
   }
 
-  bool ceapi CERegistryW::ceOpenKey(const std::wstring SubKey, eRegAccess RegAccess)
+  bool ceapi CERegistryW::ceOpenKey(const std::wstring& SubKey, eRegAccess RegAccess)
   {
     m_LastErrorCode = RegOpenKeyExW(m_HKRootKey, SubKey.c_str(), 0, (REGSAM)RegAccess, &m_HKSubKey);
     return (m_LastErrorCode == ERROR_SUCCESS);
@@ -4401,7 +4436,7 @@ namespace ce {
     return this->ceDeleteKey(m_SubKey);
   }
 
-  bool ceapi CERegistryW::ceDeleteKey(const std::wstring SubKey)
+  bool ceapi CERegistryW::ceDeleteKey(const std::wstring& SubKey)
   {
     if (m_HKRootKey == 0) {
       return false;
@@ -4412,7 +4447,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryW::ceDeleteValue(const std::wstring Value)
+  bool ceapi CERegistryW::ceDeleteValue(const std::wstring& Value)
   {
     if (m_HKSubKey == 0) {
       return false;
@@ -4455,7 +4490,7 @@ namespace ce {
       &cbMaxValueLen,
       &cbSecurityDescriptor,
       &ftLastWriteTime
-      );
+    );
 
     if (m_LastErrorCode != ERROR_SUCCESS || cSubKeys == 0) return l;
 
@@ -4528,7 +4563,7 @@ namespace ce {
 
   // Write
 
-  bool ceapi CERegistryW::ceWriteInteger(const std::wstring ValueName, int Value)
+  bool ceapi CERegistryW::ceWriteInteger(const std::wstring& ValueName, int Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4541,7 +4576,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryW::ceWriteBool(const std::wstring ValueName, bool Value)
+  bool ceapi CERegistryW::ceWriteBool(const std::wstring& ValueName, bool Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4554,7 +4589,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryW::ceWriteFloat(const std::wstring ValueName, float Value)
+  bool ceapi CERegistryW::ceWriteFloat(const std::wstring& ValueName, float Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4570,7 +4605,7 @@ namespace ce {
   // For REG_SZ, REG_MULTI_SZ and REG_EXPAND_SZ:
   // https://msdn.microsoft.com/en-us/library/windows/desktop/ms724884(v=vs.85).aspx
 
-  bool ceapi CERegistryW::ceWriteString(const std::wstring ValueName, const std::wstring Value)
+  bool ceapi CERegistryW::ceWriteString(const std::wstring& ValueName, const std::wstring& Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4590,7 +4625,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryW::ceWriteMultiString(const std::wstring ValueName, const wchar * lpValue)
+  bool ceapi CERegistryW::ceWriteMultiString(const std::wstring& ValueName, const wchar * lpValue)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4610,13 +4645,13 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryW::ceWriteMultiString(const std::wstring ValueName, const std::list<std::wstring> Value)
+  bool ceapi CERegistryW::ceWriteMultiString(const std::wstring& ValueName, const std::list<std::wstring> Value)
   {
     std::shared_ptr<wchar> p = ceListToMultiStringW(Value);
     return this->ceWriteMultiString(ValueName, p.get());
   }
 
-  bool ceapi CERegistryW::ceWriteExpandString(const std::wstring ValueName, const std::wstring Value)
+  bool ceapi CERegistryW::ceWriteExpandString(const std::wstring& ValueName, const std::wstring& Value)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4636,7 +4671,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryW::ceWriteBinary(const std::wstring ValueName, void * lpData, ulong ulSize)
+  bool ceapi CERegistryW::ceWriteBinary(const std::wstring& ValueName, void* lpData, ulong ulSize)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4651,7 +4686,7 @@ namespace ce {
 
   // Read
 
-  int ceapi CERegistryW::ceReadInteger(const std::wstring ValueName, int Default)
+  int ceapi CERegistryW::ceReadInteger(const std::wstring& ValueName, int Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4670,7 +4705,7 @@ namespace ce {
     return ret;
   }
 
-  bool ceapi CERegistryW::ceReadBool(const std::wstring ValueName, bool Default)
+  bool ceapi CERegistryW::ceReadBool(const std::wstring& ValueName, bool Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4689,7 +4724,7 @@ namespace ce {
     return ret;
   }
 
-  float ceapi CERegistryW::ceReadFloat(const std::wstring ValueName, float Default)
+  float ceapi CERegistryW::ceReadFloat(const std::wstring& ValueName, float Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4708,7 +4743,7 @@ namespace ce {
     return ret;
   }
 
-  std::wstring ceapi CERegistryW::ceReadString(const std::wstring ValueName, const std::wstring Default)
+  std::wstring ceapi CERegistryW::ceReadString(const std::wstring& ValueName, const std::wstring& Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4740,7 +4775,10 @@ namespace ce {
     return s;
   }
 
-  std::list<std::wstring> ceapi CERegistryW::ceReadMultiString(const std::wstring ValueName, std::list<std::wstring> Default)
+  std::list<std::wstring> ceapi CERegistryW::ceReadMultiString(
+    const std::wstring& ValueName,
+    std::list<std::wstring> Default
+  )
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4772,7 +4810,7 @@ namespace ce {
     return l;
   }
 
-  std::wstring ceapi CERegistryW::ceReadExpandString(const std::wstring ValueName, const std::wstring Default)
+  std::wstring ceapi CERegistryW::ceReadExpandString(const std::wstring& ValueName, const std::wstring& Default)
   {
     if (m_HKSubKey == 0) {
       m_LastErrorCode = ERROR_INVALID_HANDLE;
@@ -4804,7 +4842,7 @@ namespace ce {
     return s;
   }
 
-  std::shared_ptr<uchar> ceapi CERegistryW::ceReadBinary(const std::wstring ValueName, const void * pDefault)
+  std::shared_ptr<uchar> ceapi CERegistryW::ceReadBinary(const std::wstring& ValueName, const void* pDefault)
   {
     std::shared_ptr<uchar> pDef((uchar*)pDefault);
 
@@ -5005,7 +5043,7 @@ namespace ce {
   }
 
   bool ceapi CEFileA::ceInit(
-    const std::string FilePath,
+    const std::string& FilePath,
     eFileModeFlags fmFlag,
     eFileGenericFlags fgFlag,
     eFileShareFlags fsFlag,
@@ -5022,7 +5060,7 @@ namespace ce {
   }
 
   bool ceapi CEFileW::ceInit(
-    const std::wstring FilePath,
+    const std::wstring& FilePath,
     eFileModeFlags fmFlag,
     eFileGenericFlags fgFlag,
     eFileShareFlags fsFlag,
@@ -5256,7 +5294,7 @@ namespace ce {
     return true;
   }
 
-  bool ceapi CEServiceA::ceOpenService(const std::string ServiceName, eServiceAccessType ServiceAccessType)
+  bool ceapi CEServiceA::ceOpenService(const std::string& ServiceName, eServiceAccessType ServiceAccessType)
   {
     if (!m_SCMHandle) {
       return false;
@@ -5275,7 +5313,7 @@ namespace ce {
     return true;
   }
 
-  std::string ceapi CEServiceA::ceGetName(const std::string AnotherServiceDisplayName)
+  std::string ceapi CEServiceA::ceGetName(const std::string& AnotherServiceDisplayName)
   {
     if (AnotherServiceDisplayName.empty()) {
       return m_Name;
@@ -5301,7 +5339,7 @@ namespace ce {
     return s;
   }
 
-  std::string ceapi CEServiceA::ceGetDisplayName(const std::string AnotherServiceName)
+  std::string ceapi CEServiceA::ceGetDisplayName(const std::string& AnotherServiceName)
   {
     if (AnotherServiceName.empty())
     {
@@ -5349,7 +5387,7 @@ namespace ce {
   }
 
   bool ceapi CEServiceW::ceCreateService(
-    const std::wstring ServiceFilePath,
+    const std::wstring& ServiceFilePath,
     eServiceAccessType ServiceAccessType,
     eServiceType ServiceType,
     eServiceStartType ServiceStartType,
@@ -5410,7 +5448,7 @@ namespace ce {
     return true;
   }
 
-  bool ceapi CEServiceW::ceOpenService(const std::wstring ServiceName, eServiceAccessType ServiceAccessType)
+  bool ceapi CEServiceW::ceOpenService(const std::wstring& ServiceName, eServiceAccessType ServiceAccessType)
   {
     if (!m_SCMHandle) {
       return false;
@@ -5429,7 +5467,7 @@ namespace ce {
     return true;
   }
 
-  std::wstring ceapi CEServiceW::ceGetName(const std::wstring AnotherServiceDisplayName)
+  std::wstring ceapi CEServiceW::ceGetName(const std::wstring& AnotherServiceDisplayName)
   {
     if (AnotherServiceDisplayName.empty()) {
       return m_Name;
@@ -5455,7 +5493,7 @@ namespace ce {
     return s;
   }
 
-  std::wstring ceapi CEServiceW::ceGetDisplayName(const std::wstring AnotherServiceName)
+  std::wstring ceapi CEServiceW::ceGetDisplayName(const std::wstring& AnotherServiceName)
   {
     if (AnotherServiceName.empty())
     {
@@ -5637,7 +5675,7 @@ namespace ce {
       TDLLInfo DLLInfo;
       DLLInfo.IIDID = e.IIDID;
       DLLInfo.Name = e.Name;
-      //DLLInfo.NumberOfFuctions = 0;
+      // DLLInfo.NumberOfFuctions = 0;
 
       DLLInfoList.push_back(DLLInfo);
     }
@@ -5686,16 +5724,6 @@ namespace ce {
         funcInfo.RVA = pThunkData->u1.AddressOfData;
         m_FunctionInfoList.push_back(funcInfo);
 
-        /*ulOffset = this->ceRVA2Offset(pThunkData->u1.AddressOfData);
-        PImportByName p = (PImportByName)((ulong)m_pBase + ulOffset);
-        if (ulOffset != -1 && p != nullptr) {
-          funcInfo.IIDID = e.IIDID;
-          funcInfo.Hint = p->Hint;
-          funcInfo.Name = (char*)p->Name;
-          funcInfo.RVA = pThunkData->u1.AddressOfData;
-          m_FunctionInfoList.push_back(funcInfo);
-        }*/
-
         pThunkData++;
       } while (pThunkData->u1.AddressOfData != 0);
     }
@@ -5704,7 +5732,7 @@ namespace ce {
   }
 
   template<typename T>
-  TDLLInfo ceapi CEPEFileSupportT<T>::ceFindImportedDLL(const std::string DLLName)
+  TDLLInfo ceapi CEPEFileSupportT<T>::ceFindImportedDLL(const std::string& DLLName)
   {
     TDLLInfo o ={0};
 
@@ -5716,8 +5744,11 @@ namespace ce {
       return o;
     }
 
+    auto s1 = ce::ceUpperStringA(DLLName);
+
     for (auto e: m_ExIDDList) {
-      if (e.Name == DLLName) {
+      auto s2 = ce::ceUpperStringA(e.Name);
+      if (s1 == s2) {
         o.IIDID = e.IIDID;
         o.Name = e.Name;
         break;
@@ -5768,7 +5799,7 @@ namespace ce {
   }
 
   template<typename T>
-  TFunctionInfoT<T> ceapi CEPEFileSupportT<T>::ceFindImportedFunction(const std::string FunctionName)
+  TFunctionInfoT<T> ceapi CEPEFileSupportT<T>::ceFindImportedFunction(const std::string& FunctionName)
   {
     TFunctionInfoT<T> o = {0};
     o.Name = FunctionName;
@@ -5830,7 +5861,7 @@ namespace ce {
   template class CEPEFileTA<ulong64>;
 
   template<typename T>
-  CEPEFileTA<T>::CEPEFileTA(const std::string PEFilePath)
+  CEPEFileTA<T>::CEPEFileTA(const std::string& PEFilePath)
   {
     CEPEFileSupportT<T>::m_Initialized = false;
 
@@ -5850,7 +5881,7 @@ namespace ce {
   }
 
   template<typename T>
-  CEResult ceapi CEPEFileTA<T>::ceParse(const std::string PEFilePath)
+  CEResult ceapi CEPEFileTA<T>::ceParse(const std::string& PEFilePath)
   {
     if (PEFilePath.length() != 0) {
       m_FilePath = PEFilePath;
@@ -5909,19 +5940,13 @@ namespace ce {
     return CE_OK;
   }
 
-  /*template<typename T>
-  void ceapi CEPEFileTA<T>::ceX()
-  {
-    // ...
-  }*/
-
   // CEPEFileTW
 
   template class CEPEFileTW<ulong32>;
   template class CEPEFileTW<ulong64>;
 
   template<typename T>
-  CEPEFileTW<T>::CEPEFileTW(const std::wstring PEFilePath)
+  CEPEFileTW<T>::CEPEFileTW(const std::wstring& PEFilePath)
   {
     CEPEFileSupportT<T>::m_Initialized = false;
 
@@ -5941,7 +5966,7 @@ namespace ce {
   }
 
   template<typename T>
-  CEResult ceapi CEPEFileTW<T>::ceParse(const std::wstring PEFilePath)
+  CEResult ceapi CEPEFileTW<T>::ceParse(const std::wstring& PEFilePath)
   {
     if (PEFilePath.length() != 0) {
       m_FilePath = PEFilePath;
@@ -6003,7 +6028,7 @@ namespace ce {
 
 // --- Begin of HDE --- //
 
-unsigned int hde32_disasm(const void *code, HDE32::hde32s *hs)
+unsigned int hde32_disasm(const void* code, HDE32::hde32s* hs)
 {
   using namespace HDE32;
 
@@ -6356,7 +6381,7 @@ disasm_done:
   return (unsigned int)hs->len;
 }
 
-unsigned int hde64_disasm(const void *code, HDE64::hde64s *hs)
+unsigned int hde64_disasm(const void* code, HDE64::hde64s* hs)
 {
   using namespace HDE64;
 
