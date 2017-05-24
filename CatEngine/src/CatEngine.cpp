@@ -1913,7 +1913,7 @@ namespace ce {
     }
   }
 
-  const CEBinary & CEBinary::operator=(const CEBinary &right)
+  const CEBinary& CEBinary::operator=(const CEBinary& right)
   {
     if(this != &right) {
       SetpData(right.m_pData, right.m_Size);
@@ -1922,7 +1922,7 @@ namespace ce {
     return *this;
   }
 
-  bool CEBinary::operator==(const CEBinary &right) const
+  bool CEBinary::operator==(const CEBinary& right) const
   {
     if(m_Size != right.m_Size) {
       return false;

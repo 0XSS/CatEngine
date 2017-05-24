@@ -1314,9 +1314,9 @@ namespace ce {
     CEBinary(ulong ulSize);
     virtual ~CEBinary();
 
-    const CEBinary& operator=(const CEBinary &right);
-    bool operator==(const CEBinary &right) const;
-    bool operator!=(const CEBinary &right) const;
+    const CEBinary& operator=(const CEBinary& right);
+    bool operator==(const CEBinary& right) const;
+    bool operator!=(const CEBinary& right) const;
     void AdjustSize (const ulong ulSize);
     const ulong GetSize() const;
     void SetUsedSize(const ulong ulUsedSize);
