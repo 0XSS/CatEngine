@@ -866,17 +866,17 @@ namespace ce {
     FA_READONLY      = 0X00000001,   // FILE_ATTRIBUTE_READONLY             = $00000001;
     FA_HIDDEN        = 0X00000002,   // FILE_ATTRIBUTE_HIDDEN               = $00000002;
     FA_SYSTEM        = 0X00000004,   // FILE_ATTRIBUTE_SYSTEM               = $00000004;
-    //FA_DIRECTORY     = 0X00000010, // FILE_ATTRIBUTE_DIRECTORY            = $00000010;
+    FA_DIRECTORY     = 0X00000010,   // FILE_ATTRIBUTE_DIRECTORY            = $00000010;
     FA_ARCHIVE       = 0X00000020,   // FILE_ATTRIBUTE_ARCHIVE              = $00000020;
-    //FA_DEVICE      = 0X00000040,   // FILE_ATTRIBUTE_DEVICE               = $00000040;
-    FA_NORM          = 0X00000080,   // FILE_ATTRIBUTE_NORMAL               = $00000080;
+    FA_DEVICE        = 0X00000040,   // FILE_ATTRIBUTE_DEVICE               = $00000040;
+    FA_NORMAL        = 0X00000080,   // FILE_ATTRIBUTE_NORMAL               = $00000080;
     FA_TEMPORARY     = 0X00000100,   // FILE_ATTRIBUTE_TEMPORARY            = $00000100;
-    //FA_SPARSEFILE    = 0X00000200, // FILE_ATTRIBUTE_SPARSE_FILE          = $00000200;
-    //FA_REPARSEPOINT  = 0X00000400, // FILE_ATTRIBUTE_REPARSE_POINT        = $00000400;
+    FA_SPARSEFILE    = 0X00000200,   // FILE_ATTRIBUTE_SPARSE_FILE          = $00000200;
+    FA_REPARSEPOINT  = 0X00000400,   // FILE_ATTRIBUTE_REPARSE_POINT        = $00000400;
     FA_COMPRESSED    = 0X00000800,   // FILE_ATTRIBUTE_COMPRESSED           = $00000800;
     FA_OFFLINE       = 0X00001000,   // FILE_ATTRIBUTE_OFFLINE              = $00001000;
-    //FANOTCONTENTINDEXED = 0X00002000, // FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  = $00002000;
-    //FAENCRYPTED     = 0X00004000, // FILE_ATTRIBUTE_ENCRYPTED            = $00004000;
+    FANOTCONTENTINDEXED = 0X00002000,// FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  = $00002000;
+    FAENCRYPTED     = 0X00004000,    // FILE_ATTRIBUTE_ENCRYPTED            = $00004000;
   } eFileAttributeFlags;
 
   typedef enum _FILE_SHARE_FLAGS {
@@ -1580,7 +1580,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
       eFileModeFlags fmFlag,
       eFileGenericFlags fgFlag   = FG_READWRITE,
       eFileShareFlags fsFlag     = FS_ALLACCESS,
-      eFileAttributeFlags faFlag = FA_NORM
+      eFileAttributeFlags faFlag = FA_NORMAL
     );
   protected:
   };
@@ -1594,7 +1594,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
       eFileModeFlags fmFlag,
       eFileGenericFlags fgFlag = FG_READWRITE,
       eFileShareFlags fsFlag   = FS_ALLACCESS,
-      eFileAttributeFlags faFlag = FA_NORM
+      eFileAttributeFlags faFlag = FA_NORMAL
     );
   protected:
   };
@@ -1682,32 +1682,51 @@ const std::string CE_LOCALHOST = "127.0.0.1";
   class CEFileMappingA : public CELastError {
   private:
     bool m_HasInit;
+    bool m_MapFile;
     HANDLE m_FileHandle;
     HANDLE m_MapHandle;
     void* m_pData;
 
-    bool ceIsValidHandle(HANDLE Handle) {
-      return (m_FileHandle != nullptr && m_FileHandle != INVALID_HANDLE_VALUE);
-    }
+    bool ceIsValidHandle(HANDLE Handle);
   public:
     CEFileMappingA();
     virtual ~CEFileMappingA();
+    /**
+     * Note:
+     * bMapFile: Map File or Named Shared Memory ?
+     */
     CEResult ceapi ceInit(
-      const std::string& FileName,
-      eFileGenericFlags fgFlag = FG_READWRITE,
-      eFileShareFlags fsFlag   = FS_READWRITE
-      );
+      bool bMapFile = false,
+      const std::string& FileName = "",
+      eFileGenericFlags fgFlag = eFileGenericFlags::FG_ALL,
+      eFileShareFlags fsFlag = eFileShareFlags::FS_ALLACCESS,
+      eFileModeFlags fmFlag = eFileModeFlags::FM_OPENEXISTING,
+      eFileAttributeFlags faFlag = eFileAttributeFlags::FA_NORMAL
+    );
+    /**
+     * Note:
+     * MapName: Within a file, it must be NULL. Else: Eg: `Local/Global\\MyFileMappingObject`.
+     * ulMaxSizeLow: Within named shared memory, it must be not NULL.
+     */
     CEResult ceapi ceCreate(
       const std::string& MapName,
-      ulong ulMaxSizeHigh = 0,
-      ulong ulMaxSizeLow  = 0
-      );
+      ulong ulMaxSizeLow  = 0,
+      ulong ulMaxSizeHigh = 0
+    );
+    /**
+     * Note:
+     * MapName: Within a file, it must be NULL. Else: Eg: `Local/Global\\MyFileMappingObject`.
+     */
     CEResult ceapi ceOpen(const std::string& MapName, bool bInheritHandle);
+    /**
+     * Note:
+     * ulMaxFileOffsetLow: Within a file, it can be not NULL.
+     */
     void* ceapi ceView(
-      ulong ulMaxFileOffsetHigh  = 0,
       ulong ulMaxFileOffsetLow   = 0,
+      ulong ulMaxFileOffsetHigh  = 0,
       ulong ulNumberOfBytesToMap = 0
-      );
+    );
     ulong ceapi ceGetFileSize();
     void ceapi ceClose();
   };
@@ -1715,32 +1734,51 @@ const std::string CE_LOCALHOST = "127.0.0.1";
   class CEFileMappingW : public CELastError {
   private:
     bool m_HasInit;
+    bool m_MapFile;
     HANDLE m_FileHandle;
     HANDLE m_MapHandle;
     void* m_pData;
 
-    bool ceIsValidHandle(HANDLE Handle) {
-      return (m_FileHandle != nullptr && m_FileHandle != INVALID_HANDLE_VALUE);
-    }
+    bool ceIsValidHandle(HANDLE Handle);
   public:
     CEFileMappingW();
     virtual ~CEFileMappingW();
+    /**
+     * Note:
+     * bMapFile: Map File or Named Shared Memory ?
+     */
     CEResult ceapi ceInit(
-      const std::wstring FileName,
-      eFileGenericFlags fgFlag = FG_READWRITE,
-      eFileShareFlags fsFlag   = FS_READWRITE
-      );
+      bool bMapFile = false,
+      const std::wstring FileName = L"",
+      eFileGenericFlags fgFlag = eFileGenericFlags::FG_ALL,
+      eFileShareFlags fsFlag = eFileShareFlags::FS_ALLACCESS,
+      eFileModeFlags fmFlag = eFileModeFlags::FM_OPENEXISTING,
+      eFileAttributeFlags faFlag = eFileAttributeFlags::FA_NORMAL
+    );
+    /**
+     * Note:
+     * MapName: Within a file, it must be NULL. Else: Eg: `Local/Global\\MyFileMappingObject`.
+     * ulMaxSizeLow: Within named shared memory, it must be not NULL.
+     */
     CEResult ceapi ceCreate(
       const std::wstring& MapName,
-      ulong ulMaxSizeHigh = 0,
-      ulong ulMaxSizeLow  = 0
-      );
+      ulong ulMaxSizeLow  = 0,
+      ulong ulMaxSizeHigh = 0
+    );
+    /**
+     * Note:
+     * MapName: Within a file, it must be NULL. Else: Eg: `Local/Global\\MyFileMappingObject`.
+     */
     CEResult ceapi ceOpen(const std::wstring& MapName, bool bInheritHandle);
+    /**
+     * Note:
+     * ulMaxFileOffsetLow: Within a file, it can be not NULL.
+     */
     void* ceapi ceView(
-      ulong ulMaxFileOffsetHigh  = 0,
       ulong ulMaxFileOffsetLow   = 0,
+      ulong ulMaxFileOffsetHigh  = 0,
       ulong ulNumberOfBytesToMap = 0
-      );
+    );
     ulong ceapi ceGetFileSize();
     void ceapi ceClose();
   };

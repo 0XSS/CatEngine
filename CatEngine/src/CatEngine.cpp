@@ -2906,10 +2906,12 @@ namespace ce {
 
   CEFileMappingA::CEFileMappingA()
   {
-    m_FileHandle = INVALID_HANDLE_VALUE;
+    m_HasInit = false;
+    m_MapFile = false;
+
+    m_pData = nullptr;
     m_MapHandle  = INVALID_HANDLE_VALUE;
-    m_pData      = nullptr;
-    m_HasInit    = false;
+    m_FileHandle = INVALID_HANDLE_VALUE;
 
     m_LastErrorCode = ERROR_SUCCESS;
   }
@@ -2919,18 +2921,32 @@ namespace ce {
     this->ceClose();
   }
 
-  CEResult ceapi CEFileMappingA::ceInit(const std::string& FileName, eFileGenericFlags fgFlag, eFileShareFlags fsFlag)
+  bool CEFileMappingA::ceIsValidHandle(HANDLE Handle)
   {
-    if (FileName.empty()) {
-      return 1;
-    }
+    return (Handle != nullptr && Handle != INVALID_HANDLE_VALUE);
+  }
 
-    m_FileHandle = CreateFileA(FileName.c_str(), fgFlag, fsFlag, NULL, OPEN_EXISTING, 0, 0);
+  CEResult ceapi CEFileMappingA::ceInit(
+    bool bMapFile,
+    const std::string& FileName,
+    eFileGenericFlags fgFlag,
+    eFileShareFlags fsFlag,
+    eFileModeFlags fmFlag,
+    eFileAttributeFlags faFlag
+  )
+  {
+    if ((m_MapFile = bMapFile)) {
+      if (FileName.empty()) {
+        return 1;
+      }
 
-    m_LastErrorCode = GetLastError();
+      m_FileHandle = CreateFileA(FileName.c_str(), fgFlag, fsFlag, NULL, fmFlag, faFlag, 0);
 
-    if (!this->ceIsValidHandle(m_FileHandle)) {
-      return 2;
+      m_LastErrorCode = GetLastError();
+
+      if (!this->ceIsValidHandle(m_FileHandle)) {
+        return 2;
+      }
     }
 
     m_HasInit = true;
@@ -2938,13 +2954,15 @@ namespace ce {
     return CE_OK;
   }
 
-  CEResult ceapi CEFileMappingA::ceCreate(const std::string& MapName, ulong ulMaxSizeHigh, ulong ulMaxSizeLow)
+  CEResult ceapi CEFileMappingA::ceCreate(const std::string& MapName, ulong ulMaxSizeLow, ulong ulMaxSizeHigh)
   {
-    if (MapName.empty()) {
-      return 1;
+    if (!m_MapFile) {
+      if (MapName.empty()) {
+        return 1;
+      }
     }
 
-    if (!m_HasInit || !this->ceIsValidHandle(m_FileHandle)) {
+    if (!m_HasInit || (m_MapFile && !this->ceIsValidHandle(m_FileHandle))) {
       return 2;
     }
 
@@ -2954,7 +2972,7 @@ namespace ce {
       PAGE_READWRITE,
       ulMaxSizeHigh,
       ulMaxSizeLow,
-      MapName.c_str()
+      (m_MapFile ? NULL : MapName.c_str())
     );
 
     m_LastErrorCode = GetLastError();
@@ -2968,8 +2986,12 @@ namespace ce {
 
   CEResult ceapi CEFileMappingA::ceOpen(const std::string& MapName, bool bInheritHandle)
   {
-    if (MapName.empty()) {
+    if (!m_MapFile) {
       return 1;
+    }
+
+    if (MapName.empty()) {
+      return 2;
     }
 
     m_MapHandle = OpenFileMappingA(FILE_MAP_ALL_ACCESS, bInheritHandle, MapName.c_str());
@@ -2977,15 +2999,15 @@ namespace ce {
     m_LastErrorCode = GetLastError();
 
     if (!this->ceIsValidHandle(m_MapHandle)) {
-      return 2;
+      return 3;
     }
 
     return CE_OK;
   }
 
   void* ceapi CEFileMappingA::ceView(
-    ulong ulMaxFileOffsetHigh,
     ulong ulMaxFileOffsetLow,
+    ulong ulMaxFileOffsetHigh,
     ulong ulNumberOfBytesToMap
   )
   {
@@ -3018,7 +3040,7 @@ namespace ce {
       m_MapHandle = INVALID_HANDLE_VALUE;
     }
 
-    if (this->ceIsValidHandle(m_FileHandle)) {
+    if (m_MapFile && this->ceIsValidHandle(m_FileHandle)) {
       CloseHandle(m_FileHandle);
       m_FileHandle = INVALID_HANDLE_VALUE;
     }
@@ -3026,7 +3048,7 @@ namespace ce {
 
   ulong ceapi CEFileMappingA::ceGetFileSize()
   {
-    if (!this->ceIsValidHandle(m_FileHandle)) {
+    if (m_MapFile && !this->ceIsValidHandle(m_FileHandle)) {
       return INVALID_FILE_SIZE;
     }
 
@@ -3039,10 +3061,12 @@ namespace ce {
 
   CEFileMappingW::CEFileMappingW()
   {
-    m_FileHandle = INVALID_HANDLE_VALUE;
+    m_HasInit = false;
+    m_MapFile = false;
+
+    m_pData = nullptr;
     m_MapHandle  = INVALID_HANDLE_VALUE;
-    m_pData      = nullptr;
-    m_HasInit    = false;
+    m_FileHandle = INVALID_HANDLE_VALUE;
 
     m_LastErrorCode = ERROR_SUCCESS;
   }
@@ -3052,39 +3076,48 @@ namespace ce {
     this->ceClose();
   }
 
+  bool CEFileMappingW::ceIsValidHandle(HANDLE Handle)
+  {
+    return (Handle != nullptr && Handle != INVALID_HANDLE_VALUE);
+  }
+
   CEResult ceapi CEFileMappingW::ceInit(
+    bool bMapFile,
     const std::wstring FileName,
     eFileGenericFlags fgFlag,
-    eFileShareFlags fsFlag
+    eFileShareFlags fsFlag,
+    eFileModeFlags fmFlag,
+    eFileAttributeFlags faFlag
   )
   {
-    if (FileName.empty()) {
-      return 1;
-    }
+    if ((m_MapFile = bMapFile)) {
+      if (FileName.empty()) {
+        return 1;
+      }
 
-    m_FileHandle = CreateFileW(FileName.c_str(), fgFlag, fsFlag, NULL, OPEN_EXISTING, 0, 0);
-    if (!this->ceIsValidHandle(m_FileHandle)) {
-      return 2;
-    }
+      m_FileHandle = CreateFileW(FileName.c_str(), fgFlag, fsFlag, NULL, fmFlag, faFlag, 0);
 
-    m_LastErrorCode = GetLastError();
+      m_LastErrorCode = GetLastError();
+
+      if (!this->ceIsValidHandle(m_FileHandle)) {
+        return 2;
+      }
+    }
 
     m_HasInit = true;
 
     return CE_OK;
   }
 
-  CEResult ceapi CEFileMappingW::ceCreate(
-    const std::wstring& MapName,
-    ulong ulMaxSizeHigh,
-    ulong ulMaxSizeLow
-  )
+  CEResult ceapi CEFileMappingW::ceCreate(const std::wstring& MapName, ulong ulMaxSizeLow, ulong ulMaxSizeHigh)
   {
-    if (MapName.empty()) {
-      return 1;
+    if (!m_MapFile) {
+      if (MapName.empty()) {
+        return 1;
+      }
     }
 
-    if (!m_HasInit || !this->ceIsValidHandle(m_FileHandle)) {
+    if (!m_HasInit || (m_MapFile && !this->ceIsValidHandle(m_FileHandle))) {
       return 2;
     }
 
@@ -3094,7 +3127,7 @@ namespace ce {
       PAGE_READWRITE,
       ulMaxSizeHigh,
       ulMaxSizeLow,
-      MapName.c_str()
+      (m_MapFile ? NULL : MapName.c_str())
     );
 
     m_LastErrorCode = GetLastError();
@@ -3108,8 +3141,12 @@ namespace ce {
 
   CEResult ceapi CEFileMappingW::ceOpen(const std::wstring& MapName, bool bInheritHandle)
   {
-    if (MapName.empty()) {
+    if (!m_MapFile) {
       return 1;
+    }
+
+    if (MapName.empty()) {
+      return 2;
     }
 
     m_MapHandle = OpenFileMappingW(FILE_MAP_ALL_ACCESS, bInheritHandle, MapName.c_str());
@@ -3117,15 +3154,15 @@ namespace ce {
     m_LastErrorCode = GetLastError();
 
     if (!this->ceIsValidHandle(m_MapHandle)) {
-      return 2;
+      return 3;
     }
 
     return CE_OK;
   }
 
   void* ceapi CEFileMappingW::ceView(
-    ulong ulMaxFileOffsetHigh,
     ulong ulMaxFileOffsetLow,
+    ulong ulMaxFileOffsetHigh,
     ulong ulNumberOfBytesToMap
   )
   {
@@ -3158,7 +3195,7 @@ namespace ce {
       m_MapHandle = INVALID_HANDLE_VALUE;
     }
 
-    if (this->ceIsValidHandle(m_FileHandle)) {
+    if (m_MapFile && this->ceIsValidHandle(m_FileHandle)) {
       CloseHandle(m_FileHandle);
       m_FileHandle = INVALID_HANDLE_VALUE;
     }
@@ -3166,7 +3203,7 @@ namespace ce {
 
   ulong ceapi CEFileMappingW::ceGetFileSize()
   {
-    if (!this->ceIsValidHandle(m_FileHandle)) {
+    if (m_MapFile && !this->ceIsValidHandle(m_FileHandle)) {
       return INVALID_FILE_SIZE;
     }
 
@@ -5580,7 +5617,7 @@ namespace ce {
       return m_SectionHeaderList;
     }
 
-    ce::PSectionHeader pSH = (PSectionHeader)((T)m_pPEHeader + sizeof(ce::TNtHeaderT<T>));
+    ce::PSectionHeader pSH = (PSectionHeader)((ulong64)m_pPEHeader + sizeof(ce::TNtHeaderT<T>));
     if (pSH == nullptr) {
       return m_SectionHeaderList;
     }
@@ -5608,14 +5645,14 @@ namespace ce {
       return m_ExIDDList;
     }
 
-    PImportDescriptor pIID = (PImportDescriptor)((T)m_pBase + ulIIDOffset);
+    PImportDescriptor pIID = (PImportDescriptor)((ulong64)m_pBase + ulIIDOffset);
     if (pIID == nullptr) {
       return m_ExIDDList;
     }
 
     m_ExIDDList.clear();
     for (int i = 0; pIID->FirstThunk != 0; i++, pIID++) {
-      std::string DllName = (char*)((ce::ulong32)m_pBase + this->ceRVA2Offset(pIID->Name));
+      std::string DllName = (char*)((ulong64)m_pBase + this->ceRVA2Offset(pIID->Name));
 
       TExIID ExIID;
       ExIID.IIDID = i;
@@ -5646,7 +5683,7 @@ namespace ce {
     }
 
     m_ImportDescriptorList.clear();
-    for (auto e: m_ExIDDList) {
+    for (const auto& e: m_ExIDDList) {
       m_ImportDescriptorList.push_back(e.pIID);
     }
 
@@ -5671,10 +5708,10 @@ namespace ce {
       return DLLInfoList;
     }
 
-    for (auto e: m_ExIDDList) {
+    for (const auto& e: m_ExIDDList) {
       TDLLInfo DLLInfo;
       DLLInfo.IIDID = e.IIDID;
-      DLLInfo.Name = e.Name;
+      DLLInfo.Name  = e.Name;
       // DLLInfo.NumberOfFuctions = 0;
 
       DLLInfoList.push_back(DLLInfo);
@@ -5701,18 +5738,18 @@ namespace ce {
     m_FunctionInfoList.clear();
     TThunkDataT<T>* pThunkData = nullptr;
     TFunctionInfoT<T> funcInfo;
-    for (auto e: m_ExIDDList) {
+    for (const auto& e: m_ExIDDList) {
       T ulOffset = this->ceRVA2Offset(e.pIID->FirstThunk);
-      if (ulOffset == -1 || (pThunkData = (TThunkDataT<T>*)((T)m_pBase + ulOffset)) == nullptr) continue;
+      if (ulOffset == -1 || (pThunkData = (TThunkDataT<T>*)((ulong64)m_pBase + ulOffset)) == nullptr) continue;
       do {
         if ((pThunkData->u1.AddressOfData & m_OrdinalFlag) == m_OrdinalFlag) { // Imported by ordinal
+          funcInfo.Name = "";
           funcInfo.Hint = -1;
           funcInfo.Ordinal = pThunkData->u1.AddressOfData & ~m_OrdinalFlag;
-          funcInfo.Name = "";
         }
         else { // Imported by name
           ulOffset = this->ceRVA2Offset(pThunkData->u1.AddressOfData);
-          PImportByName p = (PImportByName)((ulong)m_pBase + ulOffset);
+          PImportByName p = (PImportByName)((ulong64)m_pBase + ulOffset);
           if (ulOffset != -1 && p != nullptr) {
             funcInfo.Hint = p->Hint;
             funcInfo.Ordinal = (T)-1;
@@ -5746,7 +5783,7 @@ namespace ce {
 
     auto s1 = ce::ceUpperStringA(DLLName);
 
-    for (auto e: m_ExIDDList) {
+    for (const auto& e: m_ExIDDList) {
       auto s2 = ce::ceUpperStringA(e.Name);
       if (s1 == s2) {
         o.IIDID = e.IIDID;
@@ -5776,7 +5813,7 @@ namespace ce {
 
     switch (Method) {
     case eImportedFunctionFindMethod::IFFM_HINT:
-      for (auto e: m_FunctionInfoList) {
+      for (const auto& e: m_FunctionInfoList) {
         if (e.Hint == FunctionInfo.Hint) {
           o = e;
           break;
@@ -5784,7 +5821,7 @@ namespace ce {
       }
       break;
     case eImportedFunctionFindMethod::IFFM_NAME:
-      for (auto e: m_FunctionInfoList) {
+      for (const auto& e: m_FunctionInfoList) {
         if (e.Name == FunctionInfo.Name) {
           o = e;
           break;
@@ -5803,7 +5840,6 @@ namespace ce {
   {
     TFunctionInfoT<T> o = {0};
     o.Name = FunctionName;
-
     return this->ceFindImportedFunction(o, eImportedFunctionFindMethod::IFFM_NAME);
   }
 
@@ -5812,7 +5848,6 @@ namespace ce {
   {
     TFunctionInfoT<T> o = {0};
     o.Hint = FunctionHint;
-
     return this->ceFindImportedFunction(o, eImportedFunctionFindMethod::IFFM_HINT);
   }
 
@@ -5832,7 +5867,7 @@ namespace ce {
     }
 
     PSectionHeader foundSection = nullptr;
-    for (auto e: m_SectionHeaderList) {
+    for (const auto& e: m_SectionHeaderList) {
       if (RVA >= e->VirtualAddress && RVA <= e->VirtualAddress + e->Misc.VirtualSize) {
         foundSection = e;
         break;
@@ -5895,11 +5930,11 @@ namespace ce {
       return 2;
     }
 
-    if (m_FileMap.ceInit(m_FilePath) != ce::CE_OK) {
+    if (m_FileMap.ceInit(true, m_FilePath) != ce::CE_OK) {
       return 3;
     }
 
-    if (m_FileMap.ceCreate("PE-CEPEFileA") != ce::CE_OK) {
+    if (m_FileMap.ceCreate("PE-" + ce::ceExtractFileNameA(m_FilePath)) != ce::CE_OK) {
       return 4;
     }
 
@@ -5914,7 +5949,7 @@ namespace ce {
     }
 
     CEPEFileSupportT<T>::m_pPEHeader = (TPEHeaderT<T>*)(
-      (T)CEPEFileSupportT<T>::m_pBase +
+      (ulong64)CEPEFileSupportT<T>::m_pBase +
       CEPEFileSupportT<T>::m_pDosHeader->e_lfanew
     );
     if (CEPEFileSupportT<T>::m_pPEHeader == nullptr) {
@@ -5980,11 +6015,11 @@ namespace ce {
       return 2;
     }
 
-    if (m_FileMap.ceInit(m_FilePath) != ce::CE_OK) {
+    if (m_FileMap.ceInit(true, m_FilePath) != ce::CE_OK) {
       return 3;
     }
 
-    if (m_FileMap.ceCreate(L"PE-CEPEFileW") != ce::CE_OK) {
+    if (m_FileMap.ceCreate(L"PE-" + ce::ceExtractFileNameW(m_FilePath)) != ce::CE_OK) {
       return 4;
     }
 
@@ -5999,7 +6034,7 @@ namespace ce {
     }
 
     CEPEFileSupportT<T>::m_pPEHeader = (TPEHeaderT<T>*)(
-      (T)CEPEFileSupportT<T>::m_pBase +
+      (ulong64)CEPEFileSupportT<T>::m_pBase +
       CEPEFileSupportT<T>::m_pDosHeader->e_lfanew
     );
     if (CEPEFileSupportT<T>::m_pPEHeader == nullptr) {

@@ -507,26 +507,37 @@ int _tmain(int argc, _TCHAR* argv[])
   // CEFileMapping
   /*ce::CEFileMapping fm;
 
-  if (fm.ceInit(_T("C:\\Windows\\notepad.exe")) != ce::CE_OK) {
+  / *if (fm.ceInit() != ce::CE_OK) {
+    std::tcout << _T("Init -> Failed ") << ce::ceLastError() << std::endl;
+  }
+  if (fm.ceCreate(_T("Global\\Sample"), 512) != ce::CE_OK) {
+    std::tcout << _T("Create -> Failed ") << ce::ceLastError() << std::endl;
+  }
+  auto p = fm.ceView();
+  if (p == nullptr) {
+    std::tcout << _T("View -> Failed ") << ce::ceLastError() << std::endl;
+  }* /
+
+  if (fm.ceInit(true, _T("C:\\Intel\\Logs\\IntelGFX.log")) != ce::CE_OK) {
     std::tcout << _T("Init -> Failed ") << ce::ceLastError() << std::endl;
   }
 
-  if (fm.ceCreate(_T("FM-Notepad.exe")) != ce::CE_OK) {
+  if (fm.ceCreate(_T("FM-IntelGFX.log"), fm.ceGetFileSize()) != ce::CE_OK) {
     std::tcout << _T("Create -> Failed ") << ce::ceLastError() << std::endl;
   }
 
-  void * p = fm.ceView();
+  auto p = fm.ceView();
   if (p == nullptr) {
     std::tcout << _T("View -> Failed ") << ce::ceLastError() << std::endl;
   }
 
   if (p != nullptr) {
-    ce::ceHexDump(p, 10*16);
+    ce::ceHexDump(p, fm.ceGetFileSize());
   }*/
 
   // CEPEFile
-  /*//ce::CEPEFileT<ce::pe32> pe(_T("F:\\SVN\\CatEngine\\Release\\Test.exe"));
-  ce::CEPEFileT<ce::pe64> pe(_T("F:\\SVN\\CatEngine\\x64\\Release\\Test.exe"));
+  /*// ce::CEPEFileT<ce::pe32> pe(_T("C:\\Program Files\\Process Hacker 2\\x86\\ProcessHacker.exe"));
+  ce::CEPEFileT<ce::pe64> pe(_T("C:\\Program Files\\Process Hacker 2\\ProcessHacker.exe"));
 
   ce::CEResult result = pe.ceParse();
   if (result != ce::CE_OK) {
@@ -581,7 +592,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
   for (auto IID: IIDs) {
     printf("%+20s %08X %08X %08X %08X\n",
-      ((ce::ulong32)pBase + pe.ceRVA2Offset(IID->Name)),
+      ((char*)pBase + pe.ceRVA2Offset(IID->Name)),
       IID->Name,
       IID->FirstThunk,
       IID->OriginalFirstThunk,
