@@ -1909,7 +1909,7 @@ namespace ce {
   CEBinary::~CEBinary()
   {
     if (m_pData != nullptr) {
-      delete[] m_pData;
+      delete[] (uchar*)m_pData;
     }
   }
 
@@ -1975,7 +1975,7 @@ namespace ce {
   {
     if(ulSize > m_Size) {
       if(m_pData != nullptr) {
-        delete[] m_pData;
+        delete[] (uchar*)m_pData;
       }
 
       m_pData = new uchar[ulSize];

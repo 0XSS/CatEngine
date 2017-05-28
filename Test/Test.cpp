@@ -152,8 +152,8 @@ int _tmain(int argc, _TCHAR* argv[])
   }*/
 
   // File/Directory
-  /*const std::tstring FILE_DIR  =  _T("F:\\Vic's Workspace\\Documents\\");
-  const std::tstring FILE_PATH =  _T("F:\\Vic's Workspace\\Documents\\IMRT.ppt");
+  /*const std::tstring FILE_DIR  =  _T("C:\\Intel\\Logs\\");
+  const std::tstring FILE_PATH =  _T("C:\\Intel\\Logs\\IntelGFX.log");
 
   std::tcout  << (ce::ceDirectoryExists(FILE_DIR) ? _T("Directory is exist") : _T("Directory isn't exist")) << std::endl;
   std::tcout  << (ce::ceFileExists(FILE_PATH) ? _T("File is exist") : _T("File isn't exist")) << std::endl;
