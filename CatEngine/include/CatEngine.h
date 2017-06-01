@@ -421,11 +421,13 @@ namespace ce {
 
 #define ceapi __stdcall
 
-#ifdef _UNICODE
-  #define T(x)  L ## x
-#else   // !_UNICODE
-  #define T(x)  x
-#endif  // _UNICODE
+#ifndef _T
+  #ifdef _UNICODE
+    #define _T(x) L ## x
+  #else   // !_UNICODE
+    #define _T(x) x
+  #endif  // _UNICODE
+#endif // _T
 
 #ifndef MAXPATH
   #define MAXPATH MAX_PATH
@@ -1189,9 +1191,11 @@ namespace ce {
   std::list<std::string> ceapi ceSplitStringA(const std::string& String, const std::string& Seperate);
   std::list<std::wstring> ceapi ceSplitStringW(const std::wstring& lpcwszString, const std::wstring& Seperate);
   std::list<std::string> ceapi ceMultiStringToListA(const char* lpcszMultiString);
-  std::list<std::wstring> ceapi ceMultiStringToListW(const wchar_t* lpcwszMultiString);
+  std::list<std::wstring> ceapi ceMultiStringToListW(const wchar* lpcwszMultiString);
   std::shared_ptr<char> ceapi ceListToMultiStringA(const std::list<std::string>& StringList);
   std::shared_ptr<wchar> ceapi ceListToMultiStringW(const std::list<std::wstring>& StringList);
+  std::string ceLoadResourceStringA(const UINT uID, HINSTANCE ModuleHandle = nullptr, const std::string& ModuleName = "");
+  std::wstring ceLoadResourceStringW(const UINT uID, HINSTANCE ModuleHandle = nullptr, const std::wstring& ModuleName = L"");
 
   /* --- Cat: Process Working --- */
   HWND ceapi ceGetConsoleWindow();
@@ -1243,6 +1247,7 @@ namespace ce {
   #define ceSplitString ceSplitStringW
   #define ceMultiStringToList ceMultiStringToListW
   #define ceListToMultiString ceListToMultiStringW
+  #define ceLoadString ceLoadStringW
   /* --- Cat: Process Working --- */
   #define ceNameToPid ceNameToPidW
   #define cePidToName cePidToNameW
@@ -1271,6 +1276,7 @@ namespace ce {
   #define ceUpperString ceUpperStringA
   #define ceSplitString ceSplitStringA
   #define ceMultiStringToList ceMultiStringToListA
+  #define ceLoadString ceLoadStringA
     /* --- Cat: Process Working --- */
   #define ceNameToPid ceNameToPidA
   #define cePidToName cePidToNameA
@@ -1332,11 +1338,11 @@ namespace ce {
 
   /* --- Cat : Library --- */
 
-  #define API_GETPROC(M, F) pfn ## F = (Pfn ## F)ce::CELibrary::ceQuickGetRoutineAddress(T( # M ), T( # F ))
+  #define API_GETPROC(M, F) pfn ## F = (Pfn ## F)ce::CELibrary::ceQuickGetRoutineAddress(_T( # M ), _T( # F ))
 
   // Custom macros. Don't use there macro. Only use theme for some special case.
-  #define API_GETPROCV(MV, F) pfn ## F = (Pfn ## F)MV.ceGetRoutineAddress(T( # F ));
-  #define API_GETPROCVA(MV, F) pfn ## F ## A = (Pfn ## F ## A)MV.ceGetRoutineAddress(T( # F ));
+  #define API_GETPROCV(MV, F) pfn ## F = (Pfn ## F)MV.ceGetRoutineAddress(_T( # F ));
+  #define API_GETPROCVA(MV, F) pfn ## F ## A = (Pfn ## F ## A)MV.ceGetRoutineAddress(_T( # F ));
 
   class CELibraryA : public CELastError {
   public:
@@ -1434,8 +1440,8 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     1. The prefix of redirection function must be : Hfn
     2. The prefix of real function pointer must be : pfn
   */
-  #define API_ATTACH(O, M, F) O.ceAPIAttach(T( # M ), T( # F ), (void*)&Hfn ## F, (void**)&pfn ## F)
-  #define API_DETACH(O, M, F) O.ceAPIDetach(T( # M ), T( # F ), (void**)&pfn ## F)
+  #define API_ATTACH(O, M, F) O.ceAPIAttach(_T( # M ), _T( # F ), (void*)&Hfn ## F, (void**)&pfn ## F)
+  #define API_DETACH(O, M, F) O.ceAPIDetach(_T( # M ), _T( # F ), (void**)&pfn ## F)
 
   class CEDynHookSupport {
   protected:

@@ -91,7 +91,7 @@ namespace ce {
       return CE_OK;
     }
 
-    CELibrary krnl32(T("kernel32.dll"));
+    CELibrary krnl32(_T("kernel32.dll"));
     if (!krnl32.ceIsLibraryAvailable()) {
       return ceErrorCode(1);
     }
@@ -143,7 +143,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, EnumProcessModules);
     if (pfnEnumProcessModules == nullptr) {
-      pfnEnumProcessModules = (PfnEnumProcessModules)krnl32.ceGetRoutineAddress(T("K32EnumProcessModules"));
+      pfnEnumProcessModules = (PfnEnumProcessModules)krnl32.ceGetRoutineAddress(_T("K32EnumProcessModules"));
       if (pfnEnumProcessModules == nullptr) {
         return ceErrorCode(11);
       }
@@ -151,7 +151,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, EnumProcessModulesEx);
     if (pfnEnumProcessModulesEx == nullptr) {
-      pfnEnumProcessModulesEx = (PfnEnumProcessModulesEx)krnl32.ceGetRoutineAddress(T("K32EnumProcessModulesEx"));
+      pfnEnumProcessModulesEx = (PfnEnumProcessModulesEx)krnl32.ceGetRoutineAddress(_T("K32EnumProcessModulesEx"));
       if (pfnEnumProcessModulesEx == nullptr) {
         return ceErrorCode(12);
       }
@@ -159,7 +159,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, EnumProcesses);
     if (pfnEnumProcesses == nullptr) {
-      pfnEnumProcesses = (PfnEnumProcesses)krnl32.ceGetRoutineAddress(T("K32EnumProcesses"));
+      pfnEnumProcesses = (PfnEnumProcesses)krnl32.ceGetRoutineAddress(_T("K32EnumProcesses"));
       if (pfnEnumProcesses == nullptr) {
         return ceErrorCode(13);
       }
@@ -167,7 +167,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, GetModuleBaseNameA);
     if (pfnGetModuleBaseNameA == nullptr) {
-      pfnGetModuleBaseNameA = (PfnGetModuleBaseNameA)krnl32.ceGetRoutineAddress(T("K32GetModuleBaseNameA"));
+      pfnGetModuleBaseNameA = (PfnGetModuleBaseNameA)krnl32.ceGetRoutineAddress(_T("K32GetModuleBaseNameA"));
       if (pfnGetModuleBaseNameA == nullptr) {
         return ceErrorCode(14);
       }
@@ -175,7 +175,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, GetModuleBaseNameW);
     if (pfnGetModuleBaseNameW == nullptr) {
-      pfnGetModuleBaseNameW = (PfnGetModuleBaseNameW)krnl32.ceGetRoutineAddress(T("K32GetModuleBaseNameW"));
+      pfnGetModuleBaseNameW = (PfnGetModuleBaseNameW)krnl32.ceGetRoutineAddress(_T("K32GetModuleBaseNameW"));
       if (pfnGetModuleBaseNameW == nullptr) {
         return ceErrorCode(15);
       }
@@ -985,14 +985,14 @@ namespace ce {
       ulErrorCode = GetLastError();
     }
 
-    wchar_t * lpwszErrorMessage = nullptr;
+    wchar* lpwszErrorMessage = nullptr;
 
     FormatMessageW(
       FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
       NULL,
       ulErrorCode,
       LANG_USER_DEFAULT,
-      (wchar_t*)&lpwszErrorMessage,
+      (wchar*)&lpwszErrorMessage,
       0,
       NULL
     );
@@ -1203,7 +1203,7 @@ namespace ce {
     return l;
   }
 
-  std::list<std::wstring> ceapi ceMultiStringToListW(const wchar_t* lpcwszMultiString)
+  std::list<std::wstring> ceapi ceMultiStringToListW(const wchar* lpcwszMultiString)
   {
     std::list<std::wstring> l;
 
@@ -1271,6 +1271,42 @@ namespace ce {
     return p;
   }
 
+  std::string ceLoadResourceStringA(const UINT uID, HINSTANCE ModuleHandle, const std::string& ModuleName)
+  {
+    char* ps = nullptr;
+    std::string s;
+    s.clear();
+
+    if ((ModuleHandle == nullptr || ModuleHandle == INVALID_HANDLE_VALUE) && ModuleName.length() != 0) {
+      ModuleHandle = GetModuleHandleA(ModuleName.c_str());
+    }
+
+    auto z = LoadStringA(ModuleHandle, uID, (LPSTR)&ps, 0);
+    if (z > 0) {
+      s.assign(ps, z);
+    }
+
+    return s;
+  }
+
+  std::wstring ceLoadResourceStringW(const UINT uID, HINSTANCE ModuleHandle, const std::wstring& ModuleName)
+  {
+    wchar* pws = nullptr;
+    std::wstring ws;
+    ws.clear();
+
+    if ((ModuleHandle == nullptr || ModuleHandle == INVALID_HANDLE_VALUE) && ModuleName.length() != 0) {
+      ModuleHandle = GetModuleHandleW(ModuleName.c_str());
+    }
+
+    auto z = LoadStringW(ModuleHandle, uID, (LPWSTR)&pws, 0);
+    if (z > 0) {
+      ws.assign(pws, z);
+    }
+
+    return ws;
+  }
+
   /* ------------------------------------------------ Process Working ----------------------------------------------- */
 
   HWND ceapi ceGetConsoleWindow()
@@ -1280,8 +1316,8 @@ namespace ce {
     HWND hwConsole = NULL;
 
     PfnGetConsoleWindow pfnGetConsoleWindow = (PfnGetConsoleWindow)CELibrary::ceQuickGetRoutineAddress(
-      T("kernel32.dll"),
-      T("GetConsoleWindow")
+      _T("kernel32.dll"),
+      _T("GetConsoleWindow")
     );
     if (pfnGetConsoleWindow) {
       hwConsole = pfnGetConsoleWindow();
@@ -1295,8 +1331,8 @@ namespace ce {
     typedef void (WINAPI *PfnGetNativeSystemInfo)(LPSYSTEM_INFO lpSystemInfo);
 
     PfnGetNativeSystemInfo pfnGetNativeSystemInfo = (PfnGetNativeSystemInfo)CELibrary::ceQuickGetRoutineAddress(
-      T("kernel32.dll"),
-      T("GetNativeSystemInfo")
+      _T("kernel32.dll"),
+      _T("GetNativeSystemInfo")
     );
 
     if (!pfnGetNativeSystemInfo) {
@@ -1312,8 +1348,8 @@ namespace ce {
   {
     typedef BOOL (WINAPI *PfnIsWow64Process)(HANDLE, PBOOL);
     PfnIsWow64Process pfnIsWow64Process = (PfnIsWow64Process)CELibrary::ceQuickGetRoutineAddress(
-      T("kernel32.dll"),
-      T("IsWow64Process")
+      _T("kernel32.dll"),
+      _T("IsWow64Process")
     );
     if (pfnIsWow64Process == nullptr) {
       return WOW64_ERROR;
@@ -1648,7 +1684,7 @@ namespace ce {
     for (ulong i = 0; i < nModules; i++) {
     memset((void*)&ModuleName, 0, sizeof(ModuleName));
     pfnGetModuleFileNameEx(hProcess, hModules[i], ModuleName, sizeof(ModuleName));
-    ceMsg(T("%d. %s"), i, ModuleName);
+    ceMsg(_T("%d. %s"), i, ModuleName);
     //OutputDebugString(ModuleName);
     }
 
@@ -4676,7 +4712,7 @@ namespace ce {
       0,
       REG_MULTI_SZ,
       (const uchar *)lpValue,
-      this->ceGetSizeOfMultiString(lpValue) + sizeof(wchar_t)
+      this->ceGetSizeOfMultiString(lpValue) + sizeof(wchar)
     );
 
     return (m_LastErrorCode == ERROR_SUCCESS);

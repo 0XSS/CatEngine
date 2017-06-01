@@ -35,7 +35,7 @@ G++ Test.cpp --std=c++11 -lCatEngine -lws2_32 -o Test.exe && Test.exe
   #pragma comment(lib, "CatEngine.lib")
 #endif // _MSC_VER || __BCPLUSPLUS__
 
-#define SEPERATOR() std::tcout << T("----------------------------------------") << std::endl;
+#define SEPERATOR() std::tcout << _T("----------------------------------------") << std::endl;
 
   typedef int (WINAPI *PfnMessageBoxA)(HWND   hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT   uType);
   typedef int (WINAPI *PfnMessageBoxW)(HWND   hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT   uType);
@@ -87,7 +87,7 @@ int _tmain(int argc, _TCHAR* argv[])
     std::cout << ce::ceFormatA("Windows 64-bit (%s)", s.c_str()) << std::endl;
   }
   else if (arch == ce::PA_X86) {
-    std::tcout << T("Windows 32-bit") << std::endl;
+    std::tcout << _T("Windows 32-bit") << std::endl;
   }
   else {
     std::tcout << _T("Unknown") << std::endl;
@@ -172,7 +172,7 @@ int _tmain(int argc, _TCHAR* argv[])
   std::tcout  << ce::ceGetCurrentFilePath() << std::endl;*/
 
   // Not complete
-  /*std::list<ce::ulong> explorersPID = ce::ceNameToPid(T("explorer.exe"));
+  /*std::list<ce::ulong> explorersPID = ce::ceNameToPid(_T("explorer.exe"));
   if (explorersPID.size() == 0) {
     return 1;
   }
@@ -328,37 +328,37 @@ int _tmain(int argc, _TCHAR* argv[])
   }*/
 
   // CERegistry (It has not complete yet)
-  /*ce::CERegistry reg(ce::HKLM, T("SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting"));
+  /*ce::CERegistry reg(ce::HKLM, _T("SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting"));
   if (!reg.ceKeyExists()) {
-    std::tcout << T("Reg -> Exist -> Failed") << ce::ceLastError() << std::endl;
+    std::tcout << _T("Reg -> Exist -> Failed") << ce::ceLastError() << std::endl;
     return 1;
   }
 
   if (!reg.ceOpenKey()) {
-    std::tcout << T("Reg -> Open-> Failed") << ce::ceLastError() << std::endl;
+    std::tcout << _T("Reg -> Open-> Failed") << ce::ceLastError() << std::endl;
     return 1;
   }
 
   reg.ceSetReflectionKey(ce::eRegReflection::RR_ENABLE);
 
-  std::tcout << T("Is Reflection Disabled ? ")
-             << (reg.ceQueryReflectionKey() == ce::eRegReflection::RR_DISABLED ? T("True") : T("False"))
+  std::tcout << _T("Is Reflection Disabled ? ")
+             << (reg.ceQueryReflectionKey() == ce::eRegReflection::RR_DISABLED ? _T("True") : _T("False"))
              << std::endl;
 
   std::list<std::tstring> l;
 
-  std::tcout << T("\n[ErrorPort] -> ");
-  std::tstring result = reg.ceReadString(T("ErrorPort"), T("<No>"));
+  std::tcout << _T("\n[ErrorPort] -> ");
+  std::tstring result = reg.ceReadString(_T("ErrorPort"), _T("<No>"));
   std::tcout << result << std::endl;
 
-  std::tcout << T("\n[MS]") << std::endl;
+  std::tcout << _T("\n[MS]") << std::endl;
   l.clear();
-  l = reg.ceReadMultiString(T("MS"), l);
+  l = reg.ceReadMultiString(_T("MS"), l);
   for (auto e: l) {
     std::tcout << e << std::endl;
   }
 
-  std::tcout << T("\n[Keys]") << std::endl;
+  std::tcout << _T("\n[Keys]") << std::endl;
   l.clear();
   l = reg.ceEnumKeys();
   for (auto e : l) {
@@ -405,12 +405,12 @@ int _tmain(int argc, _TCHAR* argv[])
 //   std::tcout << _T("RegString\t" << reg.ceReadString("RegString", "") << std::endl;
 
   if (!reg.ceCloseKey()) {
-    std::tcout << T("Reg -> Close ->Failed") << ce::ceLastError() << std::endl;
+    std::tcout << _T("Reg -> Close ->Failed") << ce::ceLastError() << std::endl;
   }*/
 
   // Data Type Information
-  /*std::tcout << (ceIsSigned(ce::UIntPtr) ? T("Signed") : T("Unsigned")) << std::endl;
-  std::tcout << (ceIsExact(ce::UIntPtr) ? T("Exact") : T("Non-Exact")) << std::endl;
+  /*std::tcout << (ceIsSigned(ce::UIntPtr) ? _T("Signed") : _T("Unsigned")) << std::endl;
+  std::tcout << (ceIsExact(ce::UIntPtr) ? _T("Exact") : _T("Non-Exact")) << std::endl;
   std::tcout << ceGetDigits(ce::UIntPtr) << std::endl;
   std::tcout << std::hex << ceGetLowest(ce::UIntPtr) << std::endl;
   std::tcout << std::hex << ceGetHighest(ce::UIntPtr) << std::endl;*/
@@ -502,7 +502,7 @@ int _tmain(int argc, _TCHAR* argv[])
   file.ceRead(&D, sizeof(D));
   file.ceClose();
 
-  std::tcout << T("D = ") << D << std::endl;*/
+  std::tcout << _T("D = ") << D << std::endl;*/
 
   // CEFileMapping
   /*ce::CEFileMapping fm;
