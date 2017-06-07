@@ -447,6 +447,19 @@ namespace ce {
 
 #define ERROR_INCORRECT_SIZE             1462L
 
+// MSVC
+#ifdef _MSC_VER
+  #define CE_FUNCTION_NAME __FUNCSIG__
+#endif
+// C++ Builder
+#ifdef __BCPLUSPLUS__
+  #define CE_FUNCTION_NAME __FUNC__
+#endif
+// MingGW
+#ifdef __MINGW32__
+  #define CE_FUNCTION_NAME __PRETTY_FUNCTION__
+#endif
+
   /* CatEngine's Types */
 
   typedef int                 CEResult;
