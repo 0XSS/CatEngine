@@ -53,6 +53,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <cstdint>
 #ifndef _WINSOCKAPI_
 #include <WinSock2.h>
 #endif
