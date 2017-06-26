@@ -602,7 +602,7 @@ namespace ce {
   #endif
   }
 
-  int ceapi ceGetFormattedLengthA(const std::string& Format, va_list args)
+  int ceapi ceGetFormattedLengthA(const std::string Format, va_list args)
   {
     int N = -1;
 
@@ -619,7 +619,7 @@ namespace ce {
     return N;
   }
 
-  int ceapi ceGetFormattedLengthW(const std::wstring& Format, va_list args)
+  int ceapi ceGetFormattedLengthW(const std::wstring Format, va_list args)
   {
     int N = -1;
 
@@ -636,7 +636,7 @@ namespace ce {
     return N;
   }
 
-  int ceapi ceGetFormattedStringLengthA(const std::string& Format, ...)
+  int ceapi ceGetFormattedStringLengthA(const std::string Format, ...)
   {
     va_list args;
     va_start(args, Format);
@@ -650,7 +650,7 @@ namespace ce {
     return N;
   }
 
-  int ceapi ceGetFormattedStringLengthW(const std::wstring& Format, ...)
+  int ceapi ceGetFormattedStringLengthW(const std::wstring Format, ...)
   {
     va_list args;
     va_start(args, Format);
@@ -668,6 +668,10 @@ namespace ce {
   {
     std::string s;
     s.clear();
+
+    if (ceInitMiscRoutine() != CE_OK) {
+      return s;
+    }
 
     va_list args;
     va_start(args, Format);
@@ -728,8 +732,12 @@ namespace ce {
     return s;
   }
 
-  void ceapi ceMsgA(const std::string& Format, ...)
+  void ceapi ceMsgA(const std::string Format, ...)
   {
+    if (ceInitMiscRoutine() != CE_OK) {
+      return;
+    }
+
     va_list args;
 
     va_start(args, Format);
@@ -754,7 +762,7 @@ namespace ce {
     OutputDebugStringA(p.get());
   }
 
-  void ceapi ceMsgW(const std::wstring& Format, ...)
+  void ceapi ceMsgW(const std::wstring Format, ...)
   {
     if (ceInitMiscRoutine() != CE_OK) {
       return;
@@ -773,7 +781,6 @@ namespace ce {
 
     ZeroMemory(p.get(), 2*N);
 
-    //vswprintf(p.get(), Format.c_str(), args);
     #ifdef _MSC_VER
       vswprintf(p.get(), N, Format.c_str(), args);
     #else
@@ -785,8 +792,12 @@ namespace ce {
     OutputDebugStringW(p.get());
   }
 
-  int ceapi ceBoxA(const std::string& Format, ...)
+  int ceapi ceBoxA(const std::string Format, ...)
   {
+    if (ceInitMiscRoutine() != CE_OK) {
+      return 0;
+    }
+
     va_list args;
 
     va_start(args, Format);
@@ -811,8 +822,12 @@ namespace ce {
     return MessageBoxA(GetActiveWindow(), p.get(), CE_TITLE_ANSI.c_str(), MB_ICONINFORMATION);
   }
 
-  int ceapi ceBoxA(HWND hWnd, const std::string& Format, ...)
+  int ceapi ceBoxA(HWND hWnd, const std::string Format, ...)
   {
+    if (ceInitMiscRoutine() != CE_OK) {
+      return 0;
+    }
+
     va_list args;
 
     va_start(args, Format);
@@ -837,7 +852,7 @@ namespace ce {
     return MessageBoxA(hWnd, p.get(), CE_TITLE_ANSI.c_str(), MB_ICONINFORMATION);
   }
 
-  int ceapi ceBoxA(HWND hWnd, uint uType, const std::string& Caption, const std::string& Format, ...)
+  int ceapi ceBoxA(HWND hWnd, uint uType, const std::string& Caption, const std::string Format, ...)
   {
     va_list args;
 
@@ -863,7 +878,7 @@ namespace ce {
     return MessageBoxA(hWnd, p.get(), Caption.c_str(), uType);
   }
 
-  int ceapi ceBoxW(const std::wstring& Format, ...)
+  int ceapi ceBoxW(const std::wstring Format, ...)
   {
     if (ceInitMiscRoutine() != CE_OK) {
       return 0;
@@ -893,7 +908,7 @@ namespace ce {
     return MessageBoxW(GetActiveWindow(), p.get(), CE_TITLE_UNICODE.c_str(), MB_ICONINFORMATION);
   }
 
-  int ceapi ceBoxW(HWND hWnd, const std::wstring& Format, ...)
+  int ceapi ceBoxW(HWND hWnd, const std::wstring Format, ...)
   {
     if (ceInitMiscRoutine() != CE_OK) {
       return 0;
@@ -923,7 +938,7 @@ namespace ce {
     return MessageBoxW(hWnd, p.get(), CE_TITLE_UNICODE.c_str(), MB_ICONINFORMATION);
   }
 
-  int ceapi ceBoxW(HWND hWnd, uint uType, const std::wstring& lpcwszCaption, const std::wstring& Format, ...)
+  int ceapi ceBoxW(HWND hWnd, uint uType, const std::wstring& lpcwszCaption, const std::wstring Format, ...)
   {
     if (ceInitMiscRoutine() != CE_OK) {
       return 0;
@@ -1017,7 +1032,7 @@ namespace ce {
     return s;
   }
 
-  std::string ceapi ceFormatTimeDateToStringA(const time_t t, const std::string& Format)
+  std::string ceapi ceFormatTimeDateToStringA(const time_t t, const std::string Format)
   {
     std::string s;
     s.clear();
@@ -1044,7 +1059,7 @@ namespace ce {
     return s;
   }
 
-  std::wstring ceapi ceFormatTimeDateToStringW(const time_t t, const std::wstring& Format)
+  std::wstring ceapi ceFormatTimeDateToStringW(const time_t t, const std::wstring Format)
   {
     std::wstring s;
     s.clear();
@@ -1302,6 +1317,50 @@ namespace ce {
     auto z = LoadStringW(ModuleHandle, uID, (LPWSTR)&pws, 0);
     if (z > 0) {
       ws.assign(pws, z);
+    }
+
+    return ws;
+  }
+
+  std::string ceTrimStringA(const std::string& String, const eTrimType& TrimType, const std::string& TrimChars)
+  {
+    auto s = String;
+
+    switch (TrimType) {
+    case eTrimType::TS_LEFT:
+      s.erase(0, s.find_first_not_of(TrimChars));
+      break;
+    case eTrimType::TS_RIGHT:
+      s.erase(s.find_last_not_of(TrimChars) + 1);
+      break;
+    case eTrimType::TS_BOTH:
+      s.erase(0, s.find_first_not_of(TrimChars));
+      s.erase(s.find_last_not_of(TrimChars) + 1);
+      break;
+    default:
+      break;
+    }
+
+    return s;
+  }
+
+  std::wstring ceTrimStringW(const std::wstring& String, const eTrimType& TrimType, const std::wstring& TrimChars)
+  {
+    auto ws = String;
+
+    switch (TrimType) {
+    case eTrimType::TS_LEFT:
+      ws.erase(0, ws.find_first_not_of(TrimChars));
+      break;
+    case eTrimType::TS_RIGHT:
+      ws.erase(ws.find_last_not_of(TrimChars) + 1);
+      break;
+    case eTrimType::TS_BOTH:
+      ws.erase(0, ws.find_first_not_of(TrimChars));
+      ws.erase(ws.find_last_not_of(TrimChars) + 1);
+      break;
+    default:
+      break;
     }
 
     return ws;

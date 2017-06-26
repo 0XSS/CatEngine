@@ -436,13 +436,13 @@ namespace ce {
 
 #define MAX_NPROCESSES  512
 
-#define KiB     1024;
-#define MiB     KiB*KiB;
-#define GiB     MiB*KiB;
+#define KiB     1024
+#define MiB     KiB*KiB
+#define GiB     MiB*KiB
 
-#define KB      1000;
-#define MB      KB*KB;
-#define GB      MB*KB;
+#define KB      1000
+#define MB      KB*KB
+#define GB      MB*KB
 
 /* Other Defination */
 
@@ -1125,6 +1125,12 @@ namespace ce {
     RR_ENABLE   = 3
   } eRegReflection;
 
+  typedef enum _TRIM_STRING {
+    TS_LEFT  = 0,
+    TS_RIGHT = 1,
+    TS_BOTH  = 2
+  } eTrimType;
+
 
 
   /* ------------------------------------------------ Public Macro(s) ------------------------------------------------ */
@@ -1176,22 +1182,22 @@ namespace ce {
   void ceapi ceHexDump(const void* Data, int Size);
 
   /* --- Cat: String Formatting --- */
-  int ceapi ceGetFormattedStringLengthA(const std::string& Format, ...);
-  int ceapi ceGetFormattedStringLengthW(const std::wstring& Format, ...);
+  int ceapi ceGetFormattedStringLengthA(const std::string Format, ...);
+  int ceapi ceGetFormattedStringLengthW(const std::wstring Format, ...);
   std::string ceapi ceFormatA(const std::string Format, ...);
   std::wstring ceapi ceFormatW(const std::wstring Format, ...);
-  void ceapi ceMsgA(const std::string& Format, ...);
-  void ceapi ceMsgW(const std::wstring& Format, ...);
-  int ceapi ceBoxA(const std::string& Format, ...);
-  int ceapi ceBoxW(const std::wstring& Format, ...);
-  int ceapi ceBoxA(HWND hWnd, const std::string& Format, ...);
-  int ceapi ceBoxW(HWND hWnd, const std::wstring& Format, ...);
-  int ceapi ceBoxA(HWND hWnd, uint uType, const std::string& Caption, const std::string& Format, ...);
-  int ceapi ceBoxW(HWND hWnd, uint uType, const std::wstring& Caption, const std::wstring& Format, ...);
+  void ceapi ceMsgA(const std::string Format, ...);
+  void ceapi ceMsgW(const std::wstring Format, ...);
+  int ceapi ceBoxA(const std::string Format, ...);
+  int ceapi ceBoxW(const std::wstring Format, ...);
+  int ceapi ceBoxA(HWND hWnd, const std::string Format, ...);
+  int ceapi ceBoxW(HWND hWnd, const std::wstring Format, ...);
+  int ceapi ceBoxA(HWND hWnd, uint uType, const std::string& Caption, const std::string Format, ...);
+  int ceapi ceBoxW(HWND hWnd, uint uType, const std::wstring& Caption, const std::wstring Format, ...);
   std::string ceapi ceLastErrorA(ulong ulErrorCode = -1);
   std::wstring ceapi ceLastErrorW(ulong ulErrorCode = -1);
-  std::string ceapi ceFormatTimeDateToStringA(const time_t t, const std::string& Format);
-  std::wstring ceapi ceFormatTimeDateToStringW(const time_t t, const std::wstring& Format);
+  std::string ceapi ceFormatTimeDateToStringA(const time_t t, const std::string Format);
+  std::wstring ceapi ceFormatTimeDateToStringW(const time_t t, const std::wstring Format);
   std::string ceapi ceTimeDateToStringA(const time_t t);
   std::wstring ceapi ceTimeDateToStringW(const time_t t);
 
@@ -1210,6 +1216,16 @@ namespace ce {
   std::shared_ptr<wchar> ceapi ceListToMultiStringW(const std::list<std::wstring>& StringList);
   std::string ceLoadResourceStringA(const UINT uID, HINSTANCE ModuleHandle = nullptr, const std::string& ModuleName = "");
   std::wstring ceLoadResourceStringW(const UINT uID, HINSTANCE ModuleHandle = nullptr, const std::wstring& ModuleName = L"");
+  std::string ceTrimStringA(
+    const std::string& String,
+    const eTrimType& TrimType = eTrimType::TS_BOTH,
+    const std::string& TrimChars = " \t\n\r\f\v"
+  );
+  std::wstring ceTrimStringW(
+    const std::wstring& String,
+    const eTrimType& TrimType = eTrimType::TS_BOTH,
+    const std::wstring& TrimChars = L" \t\n\r\f\v"
+  );
 
   /* --- Cat: Process Working --- */
   HWND ceapi ceGetConsoleWindow();
@@ -1248,7 +1264,6 @@ namespace ce {
   /* --- Cat: Misc Working --- */
   #define ceGetEnviroment ceGetEnviromentW
   /* --- Cat: String Formatting --- */
-  #define ceGetFormattedLength ceGetFormattedLengthW
   #define ceFormat ceFormatW
   #define ceMsg ceMsgW
   #define ceBox ceBoxW
@@ -1261,7 +1276,8 @@ namespace ce {
   #define ceSplitString ceSplitStringW
   #define ceMultiStringToList ceMultiStringToListW
   #define ceListToMultiString ceListToMultiStringW
-  #define ceLoadString ceLoadStringW
+  #define ceLoadResourceString ceLoadResourceStringW
+  #define ceTrimString ceTrimStringW
   /* --- Cat: Process Working --- */
   #define ceNameToPid ceNameToPidW
   #define cePidToName cePidToNameW
@@ -1278,7 +1294,6 @@ namespace ce {
   /* --- Cat: Misc Working --- */
   #define ceGetEnviroment ceGetEnviromentA
   /* --- Cat: String Formatting --- */
-  #define ceGetFormattedLength ceGetFormattedLengthA
   #define ceFormat ceFormatA
   #define ceMsg ceMsgA
   #define ceBox ceBoxA
@@ -1290,7 +1305,8 @@ namespace ce {
   #define ceUpperString ceUpperStringA
   #define ceSplitString ceSplitStringA
   #define ceMultiStringToList ceMultiStringToListA
-  #define ceLoadString ceLoadStringA
+  #define ceLoadResourceString ceLoadResourceStringA
+  #define ceTrimString ceTrimStringA
     /* --- Cat: Process Working --- */
   #define ceNameToPid ceNameToPidA
   #define cePidToName cePidToNameA

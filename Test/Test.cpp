@@ -113,6 +113,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
   std::tcout  << ce::ceLowerString(_T("I Love You")) << std::endl;
   std::tcout << ce::ceUpperString(_T("I Love You")) << std::endl;
+
+  std::tcout << ce::ceTrimString(_T("   THIS IS A TRIM STRING   ")) << std::endl;
   
   std::tcout << ce::ceLastError() << std::endl;
 
