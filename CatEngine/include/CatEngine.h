@@ -31,7 +31,7 @@
 /* The condition of CatEngine to use */
 
 #if !defined(_WIN32) && !defined(_WIN64)
-  #error CatEngine just available for Windows (32-bit and 64-bit) platform
+  #error CatEngine is just available for Windows (32-bit and 64-bit) platform.
 #endif // !defined(_WIN32) && !defined(_WIN64)
 
 #ifndef __cplusplus
@@ -388,7 +388,7 @@ namespace std {
     typedef wofstream       tofstream;
 
     typedef wios            tios;
-  #else   // !_UNICODE
+  #else // !_UNICODE
     #define tcerr           cerr
     #define tcin            cin
     #define tclog           clog
@@ -413,7 +413,7 @@ namespace std {
     typedef ofstream        tofstream;
 
     typedef ios             tios;
-  #endif  // _UNICODE
+  #endif // _UNICODE
 } // namespace std
 
 namespace ce {
@@ -425,9 +425,9 @@ namespace ce {
 #ifndef _T
   #ifdef _UNICODE
     #define _T(x) L ## x
-  #else   // !_UNICODE
+  #else  // !_UNICODE
     #define _T(x) x
-  #endif  // _UNICODE
+  #endif // _UNICODE
 #endif // _T
 
 #ifndef MAXPATH
@@ -1182,8 +1182,6 @@ namespace ce {
   void ceapi ceHexDump(const void* Data, int Size);
 
   /* --- Cat: String Formatting --- */
-  int ceapi ceGetFormattedStringLengthA(const std::string Format, ...);
-  int ceapi ceGetFormattedStringLengthW(const std::wstring Format, ...);
   std::string ceapi ceFormatA(const std::string Format, ...);
   std::wstring ceapi ceFormatW(const std::wstring Format, ...);
   void ceapi ceMsgA(const std::string Format, ...);
@@ -1196,10 +1194,10 @@ namespace ce {
   int ceapi ceBoxW(HWND hWnd, uint uType, const std::wstring& Caption, const std::wstring Format, ...);
   std::string ceapi ceLastErrorA(ulong ulErrorCode = -1);
   std::wstring ceapi ceLastErrorW(ulong ulErrorCode = -1);
-  std::string ceapi ceFormatTimeDateToStringA(const time_t t, const std::string Format);
-  std::wstring ceapi ceFormatTimeDateToStringW(const time_t t, const std::wstring Format);
-  std::string ceapi ceTimeDateToStringA(const time_t t);
-  std::wstring ceapi ceTimeDateToStringW(const time_t t);
+  std::string ceapi ceFormatDateTimeA(const time_t t, const std::string Format);
+  std::wstring ceapi ceFormatDateTimeW(const time_t t, const std::wstring Format);
+  std::string ceapi ceDateTimeToStringA(const time_t t);
+  std::wstring ceapi ceDateTimeToStringW(const time_t t);
 
   /* --- Cat: String Working --- */
   std::string ceapi ceLowerStringA(const std::string& String);
@@ -1268,8 +1266,8 @@ namespace ce {
   #define ceMsg ceMsgW
   #define ceBox ceBoxW
   #define ceLastError ceLastErrorW
-  #define ceTimeDateToString ceTimeDateToStringW
-  #define ceFormatTimeDateToString ceFormatTimeDateToStringW
+  #define ceDateTimeToString ceDateTimeToStringW
+  #define ceFormatDateTime ceFormatDateTimeW
   /* --- Cat: String Working --- */
   #define ceLowerString ceLowerStringW
   #define ceUpperString ceUpperStringW
@@ -1298,8 +1296,8 @@ namespace ce {
   #define ceMsg ceMsgA
   #define ceBox ceBoxA
   #define ceLastError ceLastErrorA
-  #define ceTimeDateToString ceTimeDateToStringA
-  #define ceFormatTimeDateToString ceFormatTimeDateToStringA
+  #define ceDateTimeToString ceDateTimeToStringA
+  #define ceFormatDateTime ceFormatDateTimeA
     /* --- Cat: String Working --- */
   #define ceLowerString ceLowerStringA
   #define ceUpperString ceUpperStringA
