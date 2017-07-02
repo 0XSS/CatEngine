@@ -106,10 +106,10 @@ int _tmain(int argc, _TCHAR* argv[])
   std::cout << std::endl;
 
   // Misc
-  /*ce::ceBox(ce::ceGetConsoleWindow(), _T("I'm %s. I'm %d years old!"), _T("Vic P"), 25);
-  ce::ceMsg(_T("I'm %s. I'm %d years old!"), _T("Vic P"), 25);
+  /*ce::ceBox(ce::ceGetConsoleWindow(), _T("I'm %s. I'm %d years old."), _T("Vic P"), 26);
+  ce::ceMsg(_T("I'm %s. I'm %d years old."), _T("Vic P"), 26);
 
-  std::tcout << ce::ceFormat(_T("I'm %s. I'm %d years old! (A)"), _T("Vic P"), 25) << std::endl;
+  std::tcout << ce::ceFormat(_T("I'm %s. I'm %d years old. (A)"), _T("Vic P"), 26) << std::endl;
 
   std::tcout  << ce::ceLowerString(_T("I Love You")) << std::endl;
   std::tcout << ce::ceUpperString(_T("I Love You")) << std::endl;
@@ -130,7 +130,7 @@ int _tmain(int argc, _TCHAR* argv[])
   for (auto& e: l) std::tcout << e << _T("|");
   std::tcout << std::endl;
 
-  std::tcout << ce::ceTimeDateToString(time(NULL)) << std::endl;
+  std::tcout << ce::ceDateTimeToString(time(NULL)) << std::endl;
 
   std::cout  << ce::ceToStringA(L"THIS IS A WIDE STRING") << std::endl;
   std::wcout << ce::ceToStringW("THIS IS AN ANSI STRING") << std::endl;

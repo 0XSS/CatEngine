@@ -497,111 +497,6 @@ namespace ce {
 
   /* --- Cat: String Formatting --- */
 
-  std::string ceapi ceGetFormatStringForNumber(std::string TypeID)
-  {
-    /* MinGW
-      i -> int
-      l -> long
-      x -> long long
-      j -> unsigned
-      m -> unsigned long
-      y -> unsigned long long
-      f -> float
-      d -> double
-      e -> long double
-    */
-
-    std::string fs = "";
-
-    if (TypeID == "i") {
-        fs = "%d";
-    }
-    else if (TypeID == "l") {
-        fs = "%ld";
-    }
-    else if (TypeID == "x") {
-        fs = "lld";
-    }
-    else if (TypeID == "j") {
-        fs = "%u";
-    }
-    else if (TypeID == "m") {
-        fs = "%lu";
-    }
-    else if (TypeID == "y") {
-        fs = "%llu";
-    }
-    else if (TypeID == "f") {
-        fs = "%f";
-    }
-    else if (TypeID == "d") {
-        fs = "%e";
-    }
-    else if (TypeID == "e") {
-        fs = "%Le";
-    }
-    else {
-        fs = "";
-    }
-
-    return fs;
-  }
-
-  template<typename T>
-  std::string ceapi ceNumberToStringA(T v)
-  {
-  #if defined(__MINGW32__)
-    std::string s = "";
-    std::string tid = std::string(typeid(v).name());
-    std::string fs = ceGetFormatStringForNumber(tid);
-
-    int z = ce::ceGetFormatLengthA(fs, v);
-    if (z <= 0) {
-        return s;
-    }
-
-    std::shared_ptr<char> p(ceCfgSP(z, char));
-    memset(p.get(), 0, z*sizeof(char));
-    sprintf(p.get(), fs.c_str(), v);
-    s.assign(p.get());
-
-    return s;
-  #else // defined(_MSC_VER) - defined(__BCPLUSPLUS__)
-    return std::to_string(v);
-  #endif
-  }
-
-  template<typename T>
-  std::wstring ceapi ceNumberToStringW(T v)
-  {
-  #if defined(__MINGW32__)
-    std::wstring s = L"";
-    std::string tid = std::string(typeid(v).name());
-
-    std::string fs = ceGetFormatStringForNumber(tid);
-
-    if (fs == "%Le") { // Does not support now
-      return s;
-    }
-
-    std::wstring wfs = ce::ceToStringW(fs);
-
-    int z = ce::ceGetFormatLengthW(wfs, v);
-    if (z <= 0) {
-        return s;
-    }
-
-    std::shared_ptr<wchar> p(ceCfgSP(z, wchar));
-    memset(p.get(), 0, z*sizeof(wchar));
-    _snwprintf(p.get(), z*sizeof(wchar), wfs.c_str(), v);  
-    s.assign(p.get());
-
-    return s;
-  #else // defined(_MSC_VER) - defined(__BCPLUSPLUS__)
-    return std::to_wstring(v);
-  #endif
-  }
-
   int ceapi ceGetFormatLengthVLA(const std::string Format, va_list args)
   {
     int N = -1;
@@ -886,6 +781,111 @@ namespace ce {
     }
 
     return s;
+  }
+
+  std::string ceapi ceGetFormatStringForNumber(std::string TypeID)
+  {
+    /* MinGW
+      i -> int
+      l -> long
+      x -> long long
+      j -> unsigned
+      m -> unsigned long
+      y -> unsigned long long
+      f -> float
+      d -> double
+      e -> long double
+    */
+
+    std::string fs = "";
+
+    if (TypeID == "i") {
+      fs = "%d";
+    }
+    else if (TypeID == "l") {
+      fs = "%ld";
+    }
+    else if (TypeID == "x") {
+      fs = "lld";
+    }
+    else if (TypeID == "j") {
+      fs = "%u";
+    }
+    else if (TypeID == "m") {
+      fs = "%lu";
+    }
+    else if (TypeID == "y") {
+      fs = "%llu";
+    }
+    else if (TypeID == "f") {
+      fs = "%f";
+    }
+    else if (TypeID == "d") {
+      fs = "%e";
+    }
+    else if (TypeID == "e") {
+      fs = "%Le";
+    }
+    else {
+      fs = "";
+    }
+
+    return fs;
+  }
+
+  template<typename T>
+  std::string ceapi ceNumberToStringA(T v)
+  {
+    #if defined(__MINGW32__)
+    std::string s = "";
+    std::string tid = std::string(typeid(v).name());
+    std::string fs = ceGetFormatStringForNumber(tid);
+
+    int z = ceGetFormatLengthA(fs, v);
+    if (z <= 0) {
+        return s;
+    }
+
+    std::shared_ptr<char> p(ceCfgSP(z, char));
+    memset(p.get(), 0, z*sizeof(char));
+    sprintf(p.get(), fs.c_str(), v);
+    s.assign(p.get());
+
+    return s;
+    #else // defined(_MSC_VER) - defined(__BCPLUSPLUS__)
+    return std::to_string(v);
+    #endif
+  }
+
+  template<typename T>
+  std::wstring ceapi ceNumberToStringW(T v)
+  {
+    #if defined(__MINGW32__)
+    std::wstring s = L"";
+    std::string tid = std::string(typeid(v).name());
+
+    std::string fs = ceGetFormatStringForNumber(tid);
+
+    if (fs == "%Le") { // Does not support now
+      return s;
+    }
+
+    std::wstring wfs = ce::ceToStringW(fs);
+
+    int z = ceGetFormatLengthW(wfs, v);
+    if (z <= 0) {
+        return s;
+    }
+
+    std::shared_ptr<wchar> p(ceCfgSP(z, wchar));
+    memset(p.get(), 0, z*sizeof(wchar));
+    _snwprintf(p.get(), z*sizeof(wchar), wfs.c_str(), v);  
+    s.assign(p.get());
+
+    return s;
+    #else // defined(_MSC_VER) - defined(__BCPLUSPLUS__)
+    return std::to_wstring(v);
+    #endif
   }
 
   std::string ceapi ceDateTimeToStringA(const time_t t)
