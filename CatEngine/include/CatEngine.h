@@ -49,7 +49,6 @@
 #include <Windows.h>
 #include <Winsvc.h>
 #include <TlHelp32.h>
-#include <list>
 #include <string>
 #include <vector>
 #include <memory>
@@ -1206,12 +1205,12 @@ namespace ce {
   std::wstring ceapi ceUpperStringW(const std::wstring& String);
   std::string ceapi ceToStringA(const std::wstring& String);
   std::wstring ceapi ceToStringW(const std::string& String);
-  std::list<std::string> ceapi ceSplitStringA(const std::string& String, const std::string& Seperate);
-  std::list<std::wstring> ceapi ceSplitStringW(const std::wstring& lpcwszString, const std::wstring& Seperate);
-  std::list<std::string> ceapi ceMultiStringToListA(const char* lpcszMultiString);
-  std::list<std::wstring> ceapi ceMultiStringToListW(const wchar* lpcwszMultiString);
-  std::shared_ptr<char> ceapi ceListToMultiStringA(const std::list<std::string>& StringList);
-  std::shared_ptr<wchar> ceapi ceListToMultiStringW(const std::list<std::wstring>& StringList);
+  std::vector<std::string> ceapi ceSplitStringA(const std::string& String, const std::string& Seperate);
+  std::vector<std::wstring> ceapi ceSplitStringW(const std::wstring& lpcwszString, const std::wstring& Seperate);
+  std::vector<std::string> ceapi ceMultiStringToListA(const char* lpcszMultiString);
+  std::vector<std::wstring> ceapi ceMultiStringToListW(const wchar* lpcwszMultiString);
+  std::shared_ptr<char> ceapi ceListToMultiStringA(const std::vector<std::string>& StringList);
+  std::shared_ptr<wchar> ceapi ceListToMultiStringW(const std::vector<std::wstring>& StringList);
   std::string ceLoadResourceStringA(const UINT uID, HINSTANCE ModuleHandle = nullptr, const std::string& ModuleName = "");
   std::wstring ceLoadResourceStringW(const UINT uID, HINSTANCE ModuleHandle = nullptr, const std::wstring& ModuleName = L"");
   std::string ceTrimStringA(
@@ -1229,8 +1228,8 @@ namespace ce {
   HWND ceapi ceGetConsoleWindow();
   eProcessorArchitecture ceGetProcessorArchitecture();
   eWow64 ceapi ceIsWow64(ulong ulPID = (ulong)-1); /* -1: Error, 0: False, 1: True */
-  std::list<ulong> ceapi ceNameToPidA(const std::string& ProcessName, ulong ulMaxProcessNumber = MAX_NPROCESSES);
-  std::list<ulong> ceapi ceNameToPidW(const std::wstring& ProcessName, ulong ulMaxProcessNumber = MAX_NPROCESSES);
+  std::vector<ulong> ceapi ceNameToPidA(const std::string& ProcessName, ulong ulMaxProcessNumber = MAX_NPROCESSES);
+  std::vector<ulong> ceapi ceNameToPidW(const std::wstring& ProcessName, ulong ulMaxProcessNumber = MAX_NPROCESSES);
   std::string ceapi cePidToNameA(ulong ulPID);
   std::wstring ceapi cePidToNameW(ulong ulPID);
   HMODULE ceapi ceRemoteGetModuleHandleA(ulong ulPID, const std::string& ModuleName); // Not complete
@@ -1834,10 +1833,10 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     void ceSetCurrentFilePath(const std::string& FilePath);
     void ceSetCurrentSection(const std::string& Section);
 
-    std::list<std::string> ceapi ceReadSection(const std::string& Section, ulong ulMaxSize = MAXBYTE);
-    std::list<std::string> ceapi ceReadSection(ulong ulMaxSize = MAXBYTE);
+    std::vector<std::string> ceapi ceReadSection(const std::string& Section, ulong ulMaxSize = MAXBYTE);
+    std::vector<std::string> ceapi ceReadSection(ulong ulMaxSize = MAXBYTE);
 
-    std::list<std::string> ceapi ceReadSectionNames(ulong ulMaxSize = MAXBYTE);
+    std::vector<std::string> ceapi ceReadSectionNames(ulong ulMaxSize = MAXBYTE);
 
     int ceapi ceReadInteger(const std::string& Section, const std::string& Key, int Default);
     bool ceapi ceReadBool(const std::string& Section, const std::string& Key, bool Default);
@@ -1880,10 +1879,10 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     void ceSetCurrentFilePath(const std::wstring& FilePath);
     void ceSetCurrentSection(const std::wstring& Section);
 
-    std::list<std::wstring> ceapi ceReadSection(const std::wstring& Section, ulong ulMaxSize = MAXBYTE);
-    std::list<std::wstring> ceapi ceReadSection(ulong ulMaxSize = MAXBYTE);
+    std::vector<std::wstring> ceapi ceReadSection(const std::wstring& Section, ulong ulMaxSize = MAXBYTE);
+    std::vector<std::wstring> ceapi ceReadSection(ulong ulMaxSize = MAXBYTE);
 
-    std::list<std::wstring> ceapi ceReadSectionNames(ulong ulMaxSize = MAXBYTE);
+    std::vector<std::wstring> ceapi ceReadSectionNames(ulong ulMaxSize = MAXBYTE);
 
     int ceapi ceReadInteger(const std::wstring& Section, const std::wstring& Key, int Default);
     bool ceapi ceReadBool(const std::wstring& Section, const std::wstring& Key, bool Default);
@@ -1949,15 +1948,15 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     bool ceapi ceDeleteKey(const std::string& SubKey);
     bool ceapi ceDeleteValue(const std::string& Value);
 
-    std::list<std::string> ceapi ceEnumKeys();
-    std::list<std::string> ceapi ceEnumValues();
+    std::vector<std::string> ceapi ceEnumKeys();
+    std::vector<std::string> ceapi ceEnumValues();
 
     bool ceapi ceWriteInteger(const std::string& ValueName, int Value);
     bool ceapi ceWriteBool(const std::string& ValueName, bool Value);
     bool ceapi ceWriteFloat(const std::string& ValueName, float Value);
     bool ceapi ceWriteString(const std::string& ValueName, const std::string& Value);
     bool ceapi ceWriteMultiString(const std::string& ValueName, const char* lpValue);
-    bool ceapi ceWriteMultiString(const std::string& ValueName, const std::list<std::string>& Value);
+    bool ceapi ceWriteMultiString(const std::string& ValueName, const std::vector<std::string>& Value);
     bool ceapi ceWriteExpandString(const std::string& ValueName, const std::string& Value);
     bool ceapi ceWriteBinary(const std::string& ValueName, void* pData, ulong ulSize);
 
@@ -1965,7 +1964,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     bool ceapi ceReadBool(const std::string& ValueName, bool Default);
     float ceapi ceReadFloat(const std::string& ValueName, float Default);
     std::string ceapi ceReadString(const std::string& ValueName, const std::string& Default);
-    std::list<std::string> ceapi ceReadMultiString(const std::string& ValueName, const std::list<std::string> Default);
+    std::vector<std::string> ceapi ceReadMultiString(const std::string& ValueName, const std::vector<std::string> Default);
     std::string ceapi ceReadExpandString(const std::string& ValueName, const std::string& Default);
     std::shared_ptr<uchar> ceapi ceReadBinary(const std::string& ValueName, const void* pDefault);
   protected:
@@ -1993,15 +1992,15 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     bool ceapi ceDeleteKey(const std::wstring& SubKey);
     bool ceapi ceDeleteValue(const std::wstring& Value);
 
-    std::list<std::wstring> ceapi ceEnumKeys();
-    std::list<std::wstring> ceapi ceEnumValues();
+    std::vector<std::wstring> ceapi ceEnumKeys();
+    std::vector<std::wstring> ceapi ceEnumValues();
 
     bool ceapi ceWriteInteger(const std::wstring& ValueName, int Value);
     bool ceapi ceWriteBool(const std::wstring& ValueName, bool Value);
     bool ceapi ceWriteFloat(const std::wstring& ValueName, float Value);
     bool ceapi ceWriteString(const std::wstring& ValueName, const std::wstring& Value);
     bool ceapi ceWriteMultiString(const std::wstring& ValueName, const wchar* Value);
-    bool ceapi ceWriteMultiString(const std::wstring& ValueName, const std::list<std::wstring> Value);
+    bool ceapi ceWriteMultiString(const std::wstring& ValueName, const std::vector<std::wstring> Value);
     bool ceapi ceWriteExpandString(const std::wstring& ValueName, const std::wstring& Value);
     bool ceapi ceWriteBinary(const std::wstring& ValueName, void* pData, ulong ulSize);
 
@@ -2009,7 +2008,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     bool ceapi ceReadBool(const std::wstring& ValueName, bool Default);
     float ceapi ceReadFloat(const std::wstring& ValueName, float Default);
     std::wstring ceapi ceReadString(const std::wstring& ValueName, const std::wstring& Default);
-    std::list<std::wstring> ceapi ceReadMultiString(const std::wstring& ValueName, const std::list<std::wstring> Default);
+    std::vector<std::wstring> ceapi ceReadMultiString(const std::wstring& ValueName, const std::vector<std::wstring> Default);
     std::wstring ceapi ceReadExpandString(const std::wstring& ValueName, const std::wstring& Default);
     std::shared_ptr<uchar> ceapi ceReadBinary(const std::wstring& ValueName, const void* Default);
   protected:
@@ -2075,11 +2074,11 @@ const std::string CE_LOCALHOST = "127.0.0.1";
     T ceapi ceRVA2Offset(T RVA);
     ulong ceapi ceOffset2RVA(ulong Offset);
 
-    std::list<PSectionHeader>& ceapi ceGetSetionHeaderList(bool Reget = false);
-    std::list<PImportDescriptor>& ceapi ceGetImportDescriptorList(bool Reget = false);
-    virtual std::list<TExIID>& ceapi ceGetExIIDList();
-    virtual std::list<TDLLInfo> ceapi ceGetDLLInfoList(bool Reget = false);
-    virtual std::list<TFunctionInfoT<T>> ceapi ceGetFunctionInfoList(bool Reget = false); // Didn't include import by index
+    std::vector<PSectionHeader>& ceapi ceGetSetionHeaderList(bool Reget = false);
+    std::vector<PImportDescriptor>& ceapi ceGetImportDescriptorList(bool Reget = false);
+    virtual std::vector<TExIID>& ceapi ceGetExIIDList();
+    virtual std::vector<TDLLInfo> ceapi ceGetDLLInfoList(bool Reget = false);
+    virtual std::vector<TFunctionInfoT<T>> ceapi ceGetFunctionInfoList(bool Reget = false); // Didn't include import by index
     virtual TDLLInfo ceapi ceFindImportedDLL(const std::string& DLLName);
     virtual TFunctionInfoT<T> ceapi ceFindImportedFunction(const std::string& FunctionName);
     virtual TFunctionInfoT<T> ceapi ceFindImportedFunction(const ushort FunctionHint);
@@ -2098,10 +2097,10 @@ const std::string CE_LOCALHOST = "127.0.0.1";
   private:
     T m_OrdinalFlag;
 
-    std::list<PSectionHeader> m_SectionHeaderList;
-    std::list<PImportDescriptor> m_ImportDescriptorList;
-    std::list<TExIID> m_ExIDDList;
-    std::list<TFunctionInfoT<T>> m_FunctionInfoList;
+    std::vector<PSectionHeader> m_SectionHeaderList;
+    std::vector<PImportDescriptor> m_ImportDescriptorList;
+    std::vector<TExIID> m_ExIDDList;
+    std::vector<TFunctionInfoT<T>> m_FunctionInfoList;
   };
 
   template <typename T>

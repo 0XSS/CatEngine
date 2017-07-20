@@ -118,7 +118,7 @@ int _tmain(int argc, _TCHAR* argv[])
   
   std::tcout << ce::ceLastError() << std::endl;
 
-  std::list<std::tstring>  l;
+  std::vector<std::tstring>  l;
 
   l.clear();
   l = ce::ceSplitString(_T("THIS IS A SPLIT STRING"), _T(" "));
@@ -141,7 +141,7 @@ int _tmain(int argc, _TCHAR* argv[])
     std::tcout << e << std::endl;
   }
 
-  std::list<ce::ulong> PIDs;
+  std::vector<ce::ulong> PIDs;
   PIDs.clear();
 
   PIDs = ce::ceNameToPid(_T("Explorer.exe"));
@@ -174,7 +174,7 @@ int _tmain(int argc, _TCHAR* argv[])
   std::tcout  << ce::ceGetCurrentFilePath() << std::endl;*/
 
   // Not complete
-  /*std::list<ce::ulong> explorersPID = ce::ceNameToPid(_T("explorer.exe"));
+  /*std::vector<ce::ulong> explorersPID = ce::ceNameToPid(_T("explorer.exe"));
   if (explorersPID.size() == 0) {
     return 1;
   }
@@ -279,7 +279,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
   ini.ceSetCurrentSection(_T("Section"));
 
-  std::list<std::tstring> l;
+  std::vector<std::tstring> l;
   l.clear();
 
   l = ini.ceReadSectionNames();
@@ -347,7 +347,7 @@ int _tmain(int argc, _TCHAR* argv[])
              << (reg.ceQueryReflectionKey() == ce::eRegReflection::RR_DISABLED ? _T("True") : _T("False"))
              << std::endl;
 
-  std::list<std::tstring> l;
+  std::vector<std::tstring> l;
 
   std::tcout << _T("\n[ErrorPort] -> ");
   std::tstring result = reg.ceReadString(_T("ErrorPort"), _T("<No>"));

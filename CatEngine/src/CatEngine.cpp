@@ -879,7 +879,7 @@ namespace ce {
 
     std::shared_ptr<wchar> p(ceCfgSP(z, wchar));
     memset(p.get(), 0, z*sizeof(wchar));
-    _snwprintf(p.get(), z*sizeof(wchar), wfs.c_str(), v);  
+    _snwprintf(p.get(), z*sizeof(wchar), wfs.c_str(), v);
     s.assign(p.get());
 
     return s;
@@ -1026,11 +1026,11 @@ namespace ce {
     return s;
   }
 
-  std::list<std::string> ceapi ceSplitStringA(const std::string& String, const std::string& Seperate)
+  std::vector<std::string> ceapi ceSplitStringA(const std::string& String, const std::string& Seperate)
   {
     std::string s(String), sep(Seperate), sub;
     ulongptr start, end;
-    std::list<std::string> l;
+    std::vector<std::string> l;
 
     l.clear();
 
@@ -1049,11 +1049,11 @@ namespace ce {
     return l;
   }
 
-  std::list<std::wstring> ceapi ceSplitStringW(const std::wstring& String, const std::wstring& Seperate)
+  std::vector<std::wstring> ceapi ceSplitStringW(const std::wstring& String, const std::wstring& Seperate)
   {
     std::wstring s(String), sep(Seperate), sub;
     ulongptr start, end;
-    std::list<std::wstring> l;
+    std::vector<std::wstring> l;
 
     l.clear();
 
@@ -1072,9 +1072,9 @@ namespace ce {
     return l;
   }
 
-  std::list<std::string> ceapi ceMultiStringToListA(const char* lpcszMultiString)
+  std::vector<std::string> ceapi ceMultiStringToListA(const char* lpcszMultiString)
   {
-    std::list<std::string> l;
+    std::vector<std::string> l;
 
     l.clear();
 
@@ -1086,9 +1086,9 @@ namespace ce {
     return l;
   }
 
-  std::list<std::wstring> ceapi ceMultiStringToListW(const wchar* lpcwszMultiString)
+  std::vector<std::wstring> ceapi ceMultiStringToListW(const wchar* lpcwszMultiString)
   {
-    std::list<std::wstring> l;
+    std::vector<std::wstring> l;
 
     l.clear();
 
@@ -1100,7 +1100,7 @@ namespace ce {
     return l;
   }
 
-  std::shared_ptr<char> ceapi ceListToMultiStringA(const std::list<std::string>& StringList)
+  std::shared_ptr<char> ceapi ceListToMultiStringA(const std::vector<std::string>& StringList)
   {
     size_t ulLength = 0;
     for (std::string e : StringList) {
@@ -1127,7 +1127,7 @@ namespace ce {
     return p;
   }
 
-  std::shared_ptr<wchar> ceapi ceListToMultiStringW(const std::list<std::wstring>& StringList)
+  std::shared_ptr<wchar> ceapi ceListToMultiStringW(const std::vector<std::wstring>& StringList)
   {
     size_t ulLength = 0;
     for (std::wstring e : StringList) {
@@ -1413,9 +1413,9 @@ namespace ce {
     return (ulong)-1;
   }
 
-  std::list<ulong> ceapi ceNameToPidA(const std::string& ProcessName, ulong ulMaxProcessNumber)
+  std::vector<ulong> ceapi ceNameToPidA(const std::string& ProcessName, ulong ulMaxProcessNumber)
   {
-    std::list<ulong> l;
+    std::vector<ulong> l;
     l.clear();
 
     if (ceInitTlHelp32() != CE_OK) {
@@ -1454,9 +1454,9 @@ namespace ce {
     return l;
   }
 
-  std::list<ulong> ceapi ceNameToPidW(const std::wstring& ProcessName, ulong ulMaxProcessNumber)
+  std::vector<ulong> ceapi ceNameToPidW(const std::wstring& ProcessName, ulong ulMaxProcessNumber)
   {
-    std::list<ulong> l;
+    std::vector<ulong> l;
     l.clear();
 
     if (ceInitTlHelp32() != CE_OK) {
@@ -2610,7 +2610,7 @@ namespace ce {
       if (hde.modrm_rm == 5 || hde.modrm_rm == 13) {  // [RIP/EIP + D32] {BP, R13} *
         #ifdef _WIN64
         /*ulPosDisp += 1;   // The first opcode. Always exists a byte for opcode of each instruction.
-        if (ceIsFlagOn(hde.flags, HDE::F_PREFIX_SEG)) { // *Note: In 64-bit the CS, SS, DS and ES segment overrides are ignored. 
+        if (ceIsFlagOn(hde.flags, HDE::F_PREFIX_SEG)) { // *Note: In 64-bit the CS, SS, DS and ES segment overrides are ignored.
           / * Prefix group 2 (take 1 byte)
             0x2E: CS segment override
             0x36: SS segment override
@@ -3214,9 +3214,9 @@ namespace ce {
 
   // Long-Read
 
-  std::list<std::string> ceapi CEIniFileA::ceReadSectionNames(ulong ulMaxSize)
+  std::vector<std::string> ceapi CEIniFileA::ceReadSectionNames(ulong ulMaxSize)
   {
-    std::list<std::string> l;
+    std::vector<std::string> l;
     l.clear();
 
     std::shared_ptr<char> p(ceCfgSP(ulMaxSize, char));
@@ -3240,9 +3240,9 @@ namespace ce {
     return l;
   }
 
-  std::list<std::string> ceapi CEIniFileA::ceReadSection(const std::string& Section, ulong ulMaxSize)
+  std::vector<std::string> ceapi CEIniFileA::ceReadSection(const std::string& Section, ulong ulMaxSize)
   {
-    std::list<std::string> l;
+    std::vector<std::string> l;
     l.clear();
 
     std::shared_ptr<char> p(ceCfgSP(ulMaxSize, char));
@@ -3356,7 +3356,7 @@ namespace ce {
 
   // Short-Read
 
-  std::list<std::string> ceapi CEIniFileA::ceReadSection(ulong ulMaxSize)
+  std::vector<std::string> ceapi CEIniFileA::ceReadSection(ulong ulMaxSize)
   {
     return this->ceReadSection(m_Section, ulMaxSize);
   }
@@ -3497,9 +3497,9 @@ namespace ce {
 
   // Long-Read
 
-  std::list<std::wstring> ceapi CEIniFileW::ceReadSectionNames(ulong ulMaxSize)
+  std::vector<std::wstring> ceapi CEIniFileW::ceReadSectionNames(ulong ulMaxSize)
   {
-    std::list<std::wstring> l;
+    std::vector<std::wstring> l;
     l.clear();
 
     std::shared_ptr<wchar> p(ceCfgSP(ulMaxSize, wchar));
@@ -3523,9 +3523,9 @@ namespace ce {
     return l;
   }
 
-  std::list<std::wstring> ceapi CEIniFileW::ceReadSection(const std::wstring& Section, ulong ulMaxSize)
+  std::vector<std::wstring> ceapi CEIniFileW::ceReadSection(const std::wstring& Section, ulong ulMaxSize)
   {
-    std::list<std::wstring> l;
+    std::vector<std::wstring> l;
     l.clear();
 
     std::shared_ptr<wchar> p(ceCfgSP(ulMaxSize, wchar));
@@ -3651,7 +3651,7 @@ namespace ce {
 
   // Short-Read
 
-  std::list<std::wstring> ceapi CEIniFileW::ceReadSection(ulong ulMaxSize)
+  std::vector<std::wstring> ceapi CEIniFileW::ceReadSection(ulong ulMaxSize)
   {
     return this->ceReadSection(m_Section, ulMaxSize);
   }
@@ -3927,9 +3927,9 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  std::list<std::string> ceapi CERegistryA::ceEnumKeys()
+  std::vector<std::string> ceapi CERegistryA::ceEnumKeys()
   {
-    std::list<std::string> l;
+    std::vector<std::string> l;
     l.clear();
 
     char Class[MAXPATH] = { 0 };
@@ -3978,9 +3978,9 @@ namespace ce {
     return l;
   }
 
-  std::list<std::string> ceapi CERegistryA::ceEnumValues()
+  std::vector<std::string> ceapi CERegistryA::ceEnumValues()
   {
-    std::list<std::string> l;
+    std::vector<std::string> l;
     l.clear();
 
     char Class[MAXPATH] = { 0 };
@@ -4114,7 +4114,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryA::ceWriteMultiString(const std::string& ValueName, const std::list<std::string>& Value)
+  bool ceapi CERegistryA::ceWriteMultiString(const std::string& ValueName, const std::vector<std::string>& Value)
   {
     std::shared_ptr<char> p = ceListToMultiStringA(Value);
     return this->ceWriteMultiString(ValueName, p.get());
@@ -4244,9 +4244,9 @@ namespace ce {
     return s;
   }
 
-  std::list<std::string> ceapi CERegistryA::ceReadMultiString(
+  std::vector<std::string> ceapi CERegistryA::ceReadMultiString(
     const std::string& ValueName,
-    std::list<std::string> Default
+    std::vector<std::string> Default
   )
   {
     if (m_HKSubKey == 0) {
@@ -4274,7 +4274,7 @@ namespace ce {
       return Default;
     }
 
-    std::list<std::string> l = ceMultiStringToListA(p.get());
+    std::vector<std::string> l = ceMultiStringToListA(p.get());
 
     return l;
   }
@@ -4458,9 +4458,9 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  std::list<std::wstring> ceapi CERegistryW::ceEnumKeys()
+  std::vector<std::wstring> ceapi CERegistryW::ceEnumKeys()
   {
-    std::list<std::wstring> l;
+    std::vector<std::wstring> l;
     l.clear();
 
     wchar Class[MAXPATH] = { 0 };
@@ -4509,9 +4509,9 @@ namespace ce {
     return l;
   }
 
-  std::list<std::wstring> ceapi CERegistryW::ceEnumValues()
+  std::vector<std::wstring> ceapi CERegistryW::ceEnumValues()
   {
-    std::list<std::wstring> l;
+    std::vector<std::wstring> l;
     l.clear();
 
     wchar Class[MAXPATH] = { 0 };
@@ -4645,7 +4645,7 @@ namespace ce {
     return (m_LastErrorCode == ERROR_SUCCESS);
   }
 
-  bool ceapi CERegistryW::ceWriteMultiString(const std::wstring& ValueName, const std::list<std::wstring> Value)
+  bool ceapi CERegistryW::ceWriteMultiString(const std::wstring& ValueName, const std::vector<std::wstring> Value)
   {
     std::shared_ptr<wchar> p = ceListToMultiStringW(Value);
     return this->ceWriteMultiString(ValueName, p.get());
@@ -4775,9 +4775,9 @@ namespace ce {
     return s;
   }
 
-  std::list<std::wstring> ceapi CERegistryW::ceReadMultiString(
+  std::vector<std::wstring> ceapi CERegistryW::ceReadMultiString(
     const std::wstring& ValueName,
-    std::list<std::wstring> Default
+    std::vector<std::wstring> Default
   )
   {
     if (m_HKSubKey == 0) {
@@ -4805,7 +4805,7 @@ namespace ce {
       return Default;
     }
 
-    std::list<std::wstring> l = ceMultiStringToListW(p.get());
+    std::vector<std::wstring> l = ceMultiStringToListW(p.get());
 
     return l;
   }
@@ -5568,7 +5568,7 @@ namespace ce {
   }
 
   template<typename T>
-  std::list<PSectionHeader>& ceapi CEPEFileSupportT<T>::ceGetSetionHeaderList(bool Reget)
+  std::vector<PSectionHeader>& ceapi CEPEFileSupportT<T>::ceGetSetionHeaderList(bool Reget)
   {
     m_SectionHeaderList.clear();
 
@@ -5595,7 +5595,7 @@ namespace ce {
   }
 
   template<typename T>
-  std::list<TExIID>& ceapi CEPEFileSupportT<T>::ceGetExIIDList()
+  std::vector<TExIID>& ceapi CEPEFileSupportT<T>::ceGetExIIDList()
   {
     m_ExIDDList.clear();
 
@@ -5629,7 +5629,7 @@ namespace ce {
   }
 
   template<typename T>
-  std::list<PImportDescriptor>& ceapi CEPEFileSupportT<T>::ceGetImportDescriptorList(bool Reget)
+  std::vector<PImportDescriptor>& ceapi CEPEFileSupportT<T>::ceGetImportDescriptorList(bool Reget)
   {
     m_ImportDescriptorList.clear();
 
@@ -5654,9 +5654,9 @@ namespace ce {
   }
 
   template<typename T>
-  std::list<TDLLInfo> ceapi CEPEFileSupportT<T>::ceGetDLLInfoList(bool Reget)
+  std::vector<TDLLInfo> ceapi CEPEFileSupportT<T>::ceGetDLLInfoList(bool Reget)
   {
-    std::list<TDLLInfo> DLLInfoList;
+    std::vector<TDLLInfo> DLLInfoList;
     DLLInfoList.clear();
 
     if (!m_Initialized) {
@@ -5684,7 +5684,7 @@ namespace ce {
   }
 
   template<typename T>
-  std::list<TFunctionInfoT<T>> ceapi CEPEFileSupportT<T>::ceGetFunctionInfoList(bool Reget)
+  std::vector<TFunctionInfoT<T>> ceapi CEPEFileSupportT<T>::ceGetFunctionInfoList(bool Reget)
   {
     if (!m_Initialized) {
       return m_FunctionInfoList;
