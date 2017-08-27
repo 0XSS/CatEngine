@@ -6,7 +6,7 @@
 #include <cassert>
 
 #ifdef _MSC_VER
-  #pragma warning(disable: 4661) // : no suitable definition provided for explicit template instantiation request
+  #pragma warning(disable: 4661) /* : no suitable definition provided for explicit template instantiation request. */
 #endif
 
 
@@ -5131,7 +5131,7 @@ namespace ce {
     if (size == 0) return pContent;
 
     #ifdef _WIN64
-      size += 8; 
+      size += 8;
     #else // _WIN32
       size += 4;
     #endif
