@@ -3,6 +3,7 @@
 #include <ctime>
 #include <cstdio>
 #include <algorithm>
+#include <cassert>
 
 #ifdef _MSC_VER
   #pragma warning(disable: 4661) // : no suitable definition provided for explicit template instantiation request
@@ -143,7 +144,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, EnumProcessModules);
     if (pfnEnumProcessModules == nullptr) {
-      pfnEnumProcessModules = (PfnEnumProcessModules)krnl32.ceGetRoutineAddress(_T("K32EnumProcessModules"));
+      pfnEnumProcessModules = (PfnEnumProcessModules)krnl32.ceGetProcAddress(_T("K32EnumProcessModules"));
       if (pfnEnumProcessModules == nullptr) {
         return ceErrorCode(11);
       }
@@ -151,7 +152,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, EnumProcessModulesEx);
     if (pfnEnumProcessModulesEx == nullptr) {
-      pfnEnumProcessModulesEx = (PfnEnumProcessModulesEx)krnl32.ceGetRoutineAddress(_T("K32EnumProcessModulesEx"));
+      pfnEnumProcessModulesEx = (PfnEnumProcessModulesEx)krnl32.ceGetProcAddress(_T("K32EnumProcessModulesEx"));
       if (pfnEnumProcessModulesEx == nullptr) {
         return ceErrorCode(12);
       }
@@ -159,7 +160,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, EnumProcesses);
     if (pfnEnumProcesses == nullptr) {
-      pfnEnumProcesses = (PfnEnumProcesses)krnl32.ceGetRoutineAddress(_T("K32EnumProcesses"));
+      pfnEnumProcesses = (PfnEnumProcesses)krnl32.ceGetProcAddress(_T("K32EnumProcesses"));
       if (pfnEnumProcesses == nullptr) {
         return ceErrorCode(13);
       }
@@ -167,7 +168,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, GetModuleBaseNameA);
     if (pfnGetModuleBaseNameA == nullptr) {
-      pfnGetModuleBaseNameA = (PfnGetModuleBaseNameA)krnl32.ceGetRoutineAddress(_T("K32GetModuleBaseNameA"));
+      pfnGetModuleBaseNameA = (PfnGetModuleBaseNameA)krnl32.ceGetProcAddress(_T("K32GetModuleBaseNameA"));
       if (pfnGetModuleBaseNameA == nullptr) {
         return ceErrorCode(14);
       }
@@ -175,7 +176,7 @@ namespace ce {
 
     API_GETPROCV(krnl32, GetModuleBaseNameW);
     if (pfnGetModuleBaseNameW == nullptr) {
-      pfnGetModuleBaseNameW = (PfnGetModuleBaseNameW)krnl32.ceGetRoutineAddress(_T("K32GetModuleBaseNameW"));
+      pfnGetModuleBaseNameW = (PfnGetModuleBaseNameW)krnl32.ceGetProcAddress(_T("K32GetModuleBaseNameW"));
       if (pfnGetModuleBaseNameW == nullptr) {
         return ceErrorCode(15);
       }
@@ -952,6 +953,43 @@ namespace ce {
     return s;
   }
 
+  eEncodingType ceapi ceDetermineEncodingType(const void* Data, const size_t size)
+  {
+    if (Data == nullptr || size == 0) return eEncodingType::ET_UTF8; /* Default fo empty file */
+
+    auto p = (uchar*)Data;
+
+    if (size > 0) {
+      if (size == 1) { /* UTF-8 */
+        if (p[0] >= SCHAR_MIN && p[0] <= SCHAR_MAX) return eEncodingType::ET_UTF8_BOM;
+      }
+      else {
+        { /* UTF-8 BOM */
+          if ((size >= 3) && (p[0] == 0xEF && p[1] == 0xBB && p[2] == 0xBF)) return eEncodingType::ET_UTF8_BOM;
+        }
+        { /* Unicode */
+          if (
+            (size >= 4) &&
+            ((p[0] >= SCHAR_MIN && p[0] <= SCHAR_MAX) && (p[1] == 0x00)) &&
+            ((p[2] >= SCHAR_MIN && p[0] <= SCHAR_MAX) && (p[3] == 0x00)) &&
+            (true)
+            ) return eEncodingType::ET_UNICODE_LE;
+        }
+        { /* Unicode BOM */
+          if (p[0] == 0xFF && p[1] == 0xFE) return eEncodingType::ET_UNICODE_LE_BOM;
+          if (p[0] == 0xFE && p[1] == 0xFF) return eEncodingType::ET_UNICODE_BE_BOM;
+        }
+        { /* UTF-8 */
+          if ((p[0] >= SCHAR_MIN && p[0] <= SCHAR_MAX) && (p[1] >= SCHAR_MIN && p[1] <= SCHAR_MAX)) {
+            return eEncodingType::ET_UTF8;
+          }
+        }
+      }
+    }
+
+    return eEncodingType::ET_UNKNOWN;
+  }
+
 
 
   /* ------------------------------------------------ String Working ------------------------------------------------ */
@@ -1236,13 +1274,13 @@ namespace ce {
 
   /* ------------------------------------------------ Process Working ----------------------------------------------- */
 
-  HWND ceapi ceGetConsoleWindow()
+  HWND ceapi ceGetConsoleWindowHandle()
   {
     typedef HWND (WINAPI *PfnGetConsoleWindow)();
 
     HWND hwConsole = NULL;
 
-    PfnGetConsoleWindow pfnGetConsoleWindow = (PfnGetConsoleWindow)CELibrary::ceQuickGetRoutineAddress(
+    PfnGetConsoleWindow pfnGetConsoleWindow = (PfnGetConsoleWindow)CELibrary::ceQuickGetProcAddress(
       _T("kernel32.dll"),
       _T("GetConsoleWindow")
     );
@@ -1257,7 +1295,7 @@ namespace ce {
   {
     typedef void (WINAPI *PfnGetNativeSystemInfo)(LPSYSTEM_INFO lpSystemInfo);
 
-    PfnGetNativeSystemInfo pfnGetNativeSystemInfo = (PfnGetNativeSystemInfo)CELibrary::ceQuickGetRoutineAddress(
+    PfnGetNativeSystemInfo pfnGetNativeSystemInfo = (PfnGetNativeSystemInfo)CELibrary::ceQuickGetProcAddress(
       _T("kernel32.dll"),
       _T("GetNativeSystemInfo")
     );
@@ -1274,7 +1312,7 @@ namespace ce {
   eWow64 ceapi ceIsWow64(ulong ulPID)
   {
     typedef BOOL (WINAPI *PfnIsWow64Process)(HANDLE, PBOOL);
-    PfnIsWow64Process pfnIsWow64Process = (PfnIsWow64Process)CELibrary::ceQuickGetRoutineAddress(
+    PfnIsWow64Process pfnIsWow64Process = (PfnIsWow64Process)CELibrary::ceQuickGetProcAddress(
       _T("kernel32.dll"),
       _T("IsWow64Process")
     );
@@ -1555,76 +1593,72 @@ namespace ce {
     return s;
   }
 
-  HMODULE ceapi ceRemoteGetModuleHandleA(ulong ulPID, const std::string& ModuleName)
+  HMODULE ceapi ceRemote32GetModuleHandleA(const ulong ulPID, const std::string& ModuleName)
   {
-    HMODULE hModule = (HMODULE)-1;
+    HMODULE result = NULL;
 
-    /*TModuleEntry32A me32 = {0};
+    assert(0);
 
-    if (ceInitTlHelp32() != CE_OK) {
-      return (HMODULE)-1;
-    }
-
-    /*HANDLE hSnap = fnCreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, ulPID);
-    if (hSnap == INVALID_HANDLE_VALUE) {
-      return nullptr;
-    }
-
-    me32.dwSize = sizeof(me32);
-
-    if (!pfnModule32FirstA(hSnap, &me32)) {
-      CloseHandle(hSnap);
-      return nullptr;
-    }
-
-    std::string s2, s1 = ceLowerStringA(ModuleName);
-
-    do {
-      s2.clear();
-      s2 = ceLowerStringA(me32.szModule);
-      if (s1 == s2) {
-        hModule = me32.hModule;
-        break;
-      };
-    } while (pfnModule32NextA(hSnap, &me32));
-
-    CloseHandle(hSnap);
-
-    return hModule;
-
-    if (ceInitTlHelp32() != 0) {
-      return (HMODULE)-1;
-    }
-
-    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, ulPID);
-    if (!hProcess) {
-    return (HMODULE)-1;
-    }
-
-    HMODULE hModules[MAX_NPROCESSES] = {0};
-    ulong cbNeeded = 0;
-    pfnEnumProcessModules(hProcess, hModules, sizeof(hModules), &cbNeeded);
-
-    ulong nModules = cbNeeded / sizeof(HMODULE);
-
-    tchar ModuleName[MAXPATH];
-    for (ulong i = 0; i < nModules; i++) {
-    memset((void*)&ModuleName, 0, sizeof(ModuleName));
-    pfnGetModuleFileNameEx(hProcess, hModules[i], ModuleName, sizeof(ModuleName));
-    ceMsg(_T("%d. %s"), i, ModuleName);
-    //OutputDebugString(ModuleName);
-    }
-
-    CloseHandle(hProcess);*/
-
-    return (HMODULE)-1;
+    return result;
   }
 
-  HMODULE ceapi ceRemoteGetModuleHandleW(const ulong ulPID, const std::wstring& ModuleName)
+  HMODULE ceapi ceRemote32GetModuleHandleW(const ulong ulPID, const std::wstring& ModuleName)
   {
-    HMODULE hModule = (HMODULE)-1;
+    auto moduleName = ceToStringA(ModuleName);
+    return ceRemote32GetModuleHandleA(ulPID, moduleName);
+  }
 
-    /*if (ceInitTlHelp32() != CE_OK) {
+  HMODULE ceapi ceRemote64GetModuleHandleA(const ulong ulPID, const std::string& ModuleName)
+  {
+    HMODULE result = NULL;
+
+    auto hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ulPID);
+    if (hProcess == 0 || hProcess == INVALID_HANDLE_VALUE) {
+      return result;
+    }
+
+    HMODULE hModules[MAX_NMODULES] = {0};
+    ulong cbNeeded = 0;
+    pfnEnumProcessModulesEx(hProcess, hModules, sizeof(hModules), &cbNeeded, LIST_MODULES_ALL);
+
+    ulong nModules = cbNeeded / sizeof(HMODULE);
+    if (nModules == 0) {
+      return result;
+    }
+
+    auto targetName = ceLowerStringA(ModuleName);
+    targetName = ceTrimStringA(targetName);
+
+    std::string iterName("");
+
+    char moduleName[MAX_PATH] = {0};
+    for (ulong i = 0; i < nModules; i++) {
+      pfnGetModuleBaseNameA(hProcess, hModules[i], moduleName, sizeof(ModuleName));
+      iterName = ceLowerStringA(moduleName);
+      if (iterName == targetName) {
+        result = hModules[i];
+        break;
+      }
+    }
+
+    SetLastError(ERROR_SUCCESS);
+
+    CloseHandle(hProcess);
+
+    return result;
+  }
+
+  HMODULE ceapi ceRemote64GetModuleHandleW(const ulong ulPID, const std::wstring& ModuleName)
+  {
+    auto moduleName = ceToStringA(ModuleName);
+    return ceRemote64GetModuleHandleA(ulPID, moduleName);
+  }
+
+  HMODULE ceapi ceRemoteGetModuleHandleA(ulong ulPID, const std::string& ModuleName)
+  {
+    HMODULE result = (HMODULE)-1;
+
+    if (ceInitTlHelp32() != CE_OK) {
       return (HMODULE)-1;
     }
 
@@ -1639,27 +1673,67 @@ namespace ce {
       }
     }
     else { // 32-bit arch
-      // 32-bit process
-      bIs32Process = true;
+      bIs32Process = true; // 32-bit process
+    }
+
+    #ifdef _WIN64 // 64-bit arch
+    if (bIs32Process) { // 32-bit process
+      result = ceRemote64GetModuleHandleA(ulPID, ModuleName); // assert(0 && "64 -> 32");
+    }
+    else { // 64-bit process
+      result = ceRemote64GetModuleHandleA(ulPID, ModuleName); // assert(0 && "64 -> 64");
+    }
+    #else // 32-bit arch
+    if (bIs32Process) { // 32-bit process
+      result = ceRemote32GetModuleHandleA(ulPID, ModuleName); // assert(0 && "32 -> 32");
+    }
+    else { // 64-bit process
+      result = ceRemote32GetModuleHandleA(ulPID, ModuleName); // assert(0 && "32 -> 64");
+    }
+    #endif // _WIN64
+
+    return result;
+  }
+
+  HMODULE ceapi ceRemoteGetModuleHandleW(const ulong ulPID, const std::wstring& ModuleName)
+  {
+    HMODULE result = (HMODULE)-1;
+
+    if (ceInitTlHelp32() != CE_OK) {
+      return (HMODULE)-1;
+    }
+
+    bool bIs32Process = false;
+
+    if (ceGetProcessorArchitecture() == eProcessorArchitecture::PA_X64) { // 64-bit arch
+      if (ceIsWow64(ulPID)) { // 32-bit process
+        bIs32Process = true;
+      }
+      else { // 64-bit process
+        bIs32Process = false;
+      }
+    }
+    else { // 32-bit arch
+      bIs32Process = true; // 32-bit process
     }
 
     #ifdef _WIN64 // 64-bit arch
       if (bIs32Process) { // 32-bit process
-        hModule = ceRemoteGetModuleHandle32W(ulPID, ModuleName);
+        result = ceRemote64GetModuleHandleW(ulPID, ModuleName); // assert(0 && "64 -> 32");
       }
       else { // 64-bit process
-        hModule = (HMODULE)-1;
+        result = ceRemote64GetModuleHandleW(ulPID, ModuleName); // assert(0 && "64 -> 64");
       }
     #else // 32-bit arch
       if (bIs32Process) { // 32-bit process
-        hModule = ceRemoteGetModuleHandle32W(ulPID, ModuleName);
+        result = ceRemote32GetModuleHandleW(ulPID, ModuleName); // assert(0 && "32 -> 32");
       }
       else { // 64-bit process
-        hModule = (HMODULE)-1;
+        result = ceRemote32GetModuleHandleW(ulPID, ModuleName); // assert(0 && "32 -> 64");
       }
-    #endif // _WIN64*/
+    #endif // _WIN64
 
-    return hModule;
+    return result;
   }
 
   /* -------------------------------------------- File/Directory Working -------------------------------------------- */
@@ -1955,7 +2029,7 @@ namespace ce {
   CELibraryA::CELibraryA()
   {
     m_ModuleName.clear();
-    m_RoutineName.clear();
+    m_ProcName.clear();
 
     m_LastErrorCode = ERROR_SUCCESS;
   }
@@ -1963,15 +2037,15 @@ namespace ce {
   CELibraryA::CELibraryA(const std::string& ModuleName)
   {
     m_ModuleName = ModuleName;
-    m_RoutineName.clear();
+    m_ProcName.clear();
 
     m_LastErrorCode = ERROR_SUCCESS;
   }
 
-  CELibraryA::CELibraryA(const std::string& ModuleName, const std::string& RoutineName)
+  CELibraryA::CELibraryA(const std::string& ModuleName, const std::string& ProcName)
   {
-    m_ModuleName  = ModuleName;
-    m_RoutineName = RoutineName;
+    m_ModuleName = ModuleName;
+    m_ProcName   = ProcName;
 
     m_LastErrorCode = ERROR_SUCCESS;
   }
@@ -1996,32 +2070,32 @@ namespace ce {
     }
   }
 
-  void* ceapi CELibraryA::ceGetRoutineAddress()
+  void* ceapi CELibraryA::ceGetProcAddress()
   {
-    if (!m_ModuleName.empty() && !m_RoutineName.empty()) {
-      return this->ceGetRoutineAddress(m_ModuleName, m_RoutineName);
+    if (!m_ModuleName.empty() && !m_ProcName.empty()) {
+      return this->ceGetProcAddress(m_ModuleName, m_ProcName);
     }
 
     return nullptr;
   }
 
-  void* ceapi CELibraryA::ceGetRoutineAddress(const std::string& RoutineName)
+  void* ceapi CELibraryA::ceGetProcAddress(const std::string& ProcName)
   {
-    if (!m_ModuleName.empty() && !RoutineName.empty()) {
-      return this->ceGetRoutineAddress(m_ModuleName, RoutineName);
+    if (!m_ModuleName.empty() && !ProcName.empty()) {
+      return this->ceGetProcAddress(m_ModuleName, ProcName);
     }
 
     return nullptr;
   }
 
-  void* ceapi CELibraryA::ceGetRoutineAddress(const std::string& ModuleName, const std::string& RoutineName)
+  void* ceapi CELibraryA::ceGetProcAddress(const std::string& ModuleName, const std::string& ProcName)
   {
     HMODULE hmod = 0;
     if (!ModuleName.empty()) hmod = LoadLibraryA(ModuleName.c_str());
 
     void* p = nullptr;
-    if (hmod && !RoutineName.empty()) {
-      p = (void*)GetProcAddress(hmod, RoutineName.c_str());
+    if (hmod && !ProcName.empty()) {
+      p = (void*)GetProcAddress(hmod, ProcName.c_str());
       m_LastErrorCode = GetLastError();
     }
 
@@ -2030,14 +2104,14 @@ namespace ce {
     return p;
   }
 
-  void* ceapi CELibraryA::ceQuickGetRoutineAddress(const std::string& ModuleName, const std::string& RoutineName)
+  void* ceapi CELibraryA::ceQuickGetProcAddress(const std::string& ModuleName, const std::string& ProcName)
   {
     HMODULE hmod = 0;
     if (!ModuleName.empty()) hmod = LoadLibraryA(ModuleName.c_str());
 
     void* p = nullptr;
-    if (hmod && !RoutineName.empty()) {
-      p = (void*)GetProcAddress(hmod, RoutineName.c_str());
+    if (hmod && !ProcName.empty()) {
+      p = (void*)GetProcAddress(hmod, ProcName.c_str());
     }
 
     FreeLibrary(hmod);
@@ -2048,7 +2122,7 @@ namespace ce {
   CELibraryW::CELibraryW()
   {
     m_ModuleName.clear();
-    m_RoutineName.clear();
+    m_ProcName.clear();
 
     m_LastErrorCode = ERROR_SUCCESS;
   }
@@ -2056,15 +2130,15 @@ namespace ce {
   CELibraryW::CELibraryW(const std::wstring& ModuleName)
   {
     m_ModuleName = ModuleName;
-    m_RoutineName.clear();
+    m_ProcName.clear();
 
     m_LastErrorCode = GetLastError();
   }
 
-  CELibraryW::CELibraryW(const std::wstring& ModuleName, const std::wstring& RoutineName)
+  CELibraryW::CELibraryW(const std::wstring& ModuleName, const std::wstring& ProcName)
   {
     m_ModuleName  = ModuleName;
-    m_RoutineName = RoutineName;
+    m_ProcName = ProcName;
 
     m_LastErrorCode = ERROR_SUCCESS;
   }
@@ -2089,32 +2163,32 @@ namespace ce {
     }
   }
 
-  void* ceapi CELibraryW::ceGetRoutineAddress()
+  void* ceapi CELibraryW::ceGetProcAddress()
   {
-    if (!m_ModuleName.empty() && !m_RoutineName.empty()) {
-      return this->ceGetRoutineAddress(m_ModuleName, m_RoutineName);
+    if (!m_ModuleName.empty() && !m_ProcName.empty()) {
+      return this->ceGetProcAddress(m_ModuleName, m_ProcName);
     }
 
     return nullptr;
   }
 
-  void* ceapi CELibraryW::ceGetRoutineAddress(const std::wstring& RoutineName)
+  void* ceapi CELibraryW::ceGetProcAddress(const std::wstring& ProcName)
   {
-    if (!m_ModuleName.empty() && !RoutineName.empty()) {
-      return this->ceGetRoutineAddress(m_ModuleName, RoutineName);
+    if (!m_ModuleName.empty() && !ProcName.empty()) {
+      return this->ceGetProcAddress(m_ModuleName, ProcName);
     }
 
     return nullptr;
   }
 
-  void* ceapi CELibraryW::ceGetRoutineAddress(const std::wstring& ModuleName, const std::wstring& RoutineName)
+  void* ceapi CELibraryW::ceGetProcAddress(const std::wstring& ModuleName, const std::wstring& ProcName)
   {
     HMODULE hmod = 0;
     if (!ModuleName.empty()) hmod = LoadLibraryW(ModuleName.c_str());
 
     void* p = nullptr;
-    if (hmod && !RoutineName.empty()) {
-      std::string s = ceToStringA(RoutineName);
+    if (hmod && !ProcName.empty()) {
+      std::string s = ceToStringA(ProcName);
       p = (void*)GetProcAddress(hmod, s.c_str());
       m_LastErrorCode = GetLastError();
     }
@@ -2124,14 +2198,14 @@ namespace ce {
     return p;
   }
 
-  void* ceapi CELibraryW::ceQuickGetRoutineAddress(const std::wstring& ModuleName, const std::wstring& RoutineName)
+  void* ceapi CELibraryW::ceQuickGetProcAddress(const std::wstring& ModuleName, const std::wstring& ProcName)
   {
     HMODULE hmod = 0;
     if (!ModuleName.empty()) hmod = LoadLibraryW(ModuleName.c_str());
 
     void* p = nullptr;
-    if (hmod && !RoutineName.empty()) {
-      std::string s = ceToStringA(RoutineName);
+    if (hmod && !ProcName.empty()) {
+      std::string s = ceToStringA(ProcName);
       p = (void*)GetProcAddress(hmod, s.c_str());
     }
 
@@ -2703,9 +2777,9 @@ namespace ce {
     bool bFoundTrampolineSize = true;
 
     #ifdef _WIN64
-        namespace HDE = HDE64;
+      namespace HDE = HDE64;
     #else
-        namespace HDE = HDE32;
+      namespace HDE = HDE32;
     #endif // _WIN64
 
     do {
@@ -2809,7 +2883,7 @@ namespace ce {
     void** lpOldProc
   )
   {
-    void* lpProc = CELibraryA::ceQuickGetRoutineAddress(ModuleName, ProcName);
+    void* lpProc = CELibraryA::ceQuickGetProcAddress(ModuleName, ProcName);
     if (lpProc == nullptr) {
       return false;
     }
@@ -2826,7 +2900,7 @@ namespace ce {
       return false;
     }
 
-    void* lpProc = CELibraryA::ceQuickGetRoutineAddress(ModuleName, ProcName);
+    void* lpProc = CELibraryA::ceQuickGetProcAddress(ModuleName, ProcName);
     if (lpProc == nullptr) {
       return false;
     }
@@ -2841,7 +2915,7 @@ namespace ce {
     void** lpOldProc
     )
   {
-    void* lpProc = CELibraryW::ceQuickGetRoutineAddress(ModuleName, ProcName);
+    void* lpProc = CELibraryW::ceQuickGetProcAddress(ModuleName, ProcName);
     if (lpProc == nullptr) {
       return false;
     }
@@ -2857,7 +2931,7 @@ namespace ce {
       return false;
     }
 
-    void* lpProc = CELibraryW::ceQuickGetRoutineAddress(ModuleName, ProcName);
+    void* lpProc = CELibraryW::ceQuickGetProcAddress(ModuleName, ProcName);
     if (lpProc == nullptr) {
       return false;
     }
@@ -4905,6 +4979,11 @@ namespace ce {
 
   /* --- Cat : File Working --- */
 
+  CEFileSupport::~CEFileSupport()
+  {
+    this->ceClose();
+  }
+
   bool ceapi CEFileSupport::ceIsFileHandleValid(HANDLE fileHandle)
   {
     if (!fileHandle || fileHandle == INVALID_HANDLE_VALUE) {
@@ -5039,7 +5118,42 @@ namespace ce {
       return false;
     }
 
+    m_FileHandle = INVALID_HANDLE_VALUE;
+
     return true;
+  }
+
+  const CEBinary ceapi CEFileSupport::ceReadContent()
+  {
+    CEBinary pContent(0);
+
+    auto size = this->ceGetFileSize();
+    if (size == 0) return pContent;
+
+    #ifdef _WIN64
+      size += 8; 
+    #else // _WIN32
+      size += 4;
+    #endif
+
+    pContent.AdjustSize(size);
+
+    this->ceRead(0, pContent.GetpData(), size, eMoveMethodFlags::MM_BEGIN);
+
+    return pContent;
+  }
+
+  // A
+
+  CEFileA::CEFileA(
+    const std::string& FilePath,
+    eFileModeFlags fmFlag,
+    eFileGenericFlags fgFlag,
+    eFileShareFlags fsFlag,
+    eFileAttributeFlags faFlag
+  )
+  {
+    this->ceInit(FilePath, fmFlag, fgFlag, fsFlag, faFlag);
   }
 
   bool ceapi CEFileA::ceInit(
@@ -5059,6 +5173,50 @@ namespace ce {
     return true;
   }
 
+  const std::string ceapi CEFileA::ceReadFileAsString(bool forceBOM)
+  {
+    std::string result("");
+
+    auto pContent = this->ceReadContent();
+    auto p = (char*)pContent.GetpData();
+
+    auto encodingType = ceDetermineEncodingType(pContent.GetpData(), pContent.GetSize());
+    if (encodingType == eEncodingType::ET_UTF8 || encodingType == eEncodingType::ET_UTF8_BOM) {
+      if (forceBOM && encodingType == eEncodingType::ET_UTF8_BOM) {
+        p += 3; /* remove BOM */
+      }
+    }
+    else { /* Invalid encoding type */
+      assert(0);
+      return result;
+    }
+
+    result.assign(p);
+
+    return result;
+  }
+
+  const std::string ceapi CEFileA::ceQuickReadFileAsString(const std::string& FilePath, bool forceBOM)
+  {
+    CEFileA file(FilePath, ce::eFileModeFlags::FM_OPENEXISTING);
+    auto result = file.ceReadFileAsString(forceBOM);
+    file.ceClose();
+    return result;
+  }
+
+  // W
+
+  CEFileW::CEFileW(
+    const std::wstring& FilePath,
+    eFileModeFlags fmFlag,
+    eFileGenericFlags fgFlag,
+    eFileShareFlags fsFlag,
+    eFileAttributeFlags faFlag
+  )
+  {
+    this->ceInit(FilePath, fmFlag, fgFlag, fsFlag, faFlag);
+  }
+
   bool ceapi CEFileW::ceInit(
     const std::wstring& FilePath,
     eFileModeFlags fmFlag,
@@ -5074,6 +5232,37 @@ namespace ce {
     }
 
     return true;
+  }
+
+  const std::wstring ceapi CEFileW::ceReadFileAsString(bool forceBOM)
+  {
+    std::wstring result(L"");
+
+    auto pContent = this->ceReadContent();
+    auto p = (wchar*)pContent.GetpData();
+
+    auto encodingType = ceDetermineEncodingType(pContent.GetpData(), pContent.GetSize());
+    if (encodingType == eEncodingType::ET_UNICODE_LE || encodingType == eEncodingType::ET_UNICODE_LE_BOM) {
+      if (forceBOM && encodingType == eEncodingType::ET_UNICODE_LE_BOM) {
+        p = (wchar*)((char*)pContent.GetpData() + 2); /* remove BOM */
+      }
+    }
+    else { /* Invalid encoding type */
+      assert(0);
+      return result;
+    }
+
+    result.assign(p);
+
+    return result;
+  }
+
+  const std::wstring ceapi CEFileW::ceQuickReadFileAsString( const std::wstring& FilePath, bool forceBOM)
+  {
+    CEFileW file(FilePath, ce::eFileModeFlags::FM_OPENEXISTING);
+    auto result = file.ceReadFileAsString(forceBOM);
+    file.ceClose();
+    return result;
   }
 
   /* --- Cat : Service Working --- */

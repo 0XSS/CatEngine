@@ -433,7 +433,8 @@ namespace ce {
   #define MAXPATH MAX_PATH
 #endif
 
-#define MAX_NPROCESSES  512
+#define MAX_NPROCESSES 512
+#define MAX_NMODULES   1024
 
 #define KiB     1024
 #define MiB     KiB*KiB
@@ -445,7 +446,7 @@ namespace ce {
 
 /* Other Defination */
 
-#define ERROR_INCORRECT_SIZE             1462L
+#define ERROR_INCORRECT_SIZE 1462L
 
 // MSVC
 #ifdef _MSC_VER
@@ -857,13 +858,13 @@ namespace ce {
     PA_X64      = PROCESSOR_ARCHITECTURE_AMD64,
     PA_WOW64    = PROCESSOR_ARCHITECTURE_IA32_ON_WIN64,
     PA_NEUTRAL  = PROCESSOR_ARCHITECTURE_NEUTRAL,
-    PA_UNKNOWN  = PROCESSOR_ARCHITECTURE_UNKNOWN
+    PA_UNKNOWN  = PROCESSOR_ARCHITECTURE_UNKNOWN,
   } eProcessorArchitecture;
 
   typedef enum _WOW64 {
     WOW64_ERROR = -1,
     WOW64_NO    = 0,
-    WOW64_YES   = 1
+    WOW64_YES   = 1,
   } eWow64;
 
   // CCatFile
@@ -891,7 +892,7 @@ namespace ce {
     FA_COMPRESSED    = 0X00000800,   // FILE_ATTRIBUTE_COMPRESSED           = $00000800;
     FA_OFFLINE       = 0X00001000,   // FILE_ATTRIBUTE_OFFLINE              = $00001000;
     FANOTCONTENTINDEXED = 0X00002000,// FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  = $00002000;
-    FAENCRYPTED     = 0X00004000,    // FILE_ATTRIBUTE_ENCRYPTED            = $00004000;
+    FAENCRYPTED      = 0X00004000,   // FILE_ATTRIBUTE_ENCRYPTED           = $00004000;
   } eFileAttributeFlags;
 
   typedef enum _FILE_SHARE_FLAGS {
@@ -900,13 +901,13 @@ namespace ce {
     FS_WRITE      = 0X00000002,
     FS_DELETE     = 0X00000004,
     FS_READWRITE  = FS_READ | FS_WRITE,
-    FS_ALLACCESS  = FS_READ | FS_WRITE | FS_DELETE
+    FS_ALLACCESS  = FS_READ | FS_WRITE | FS_DELETE,
   } eFileShareFlags;
 
   typedef enum _MOVE_METHOD_FLAGS {
     MM_BEGIN   = FILE_BEGIN,
     MM_CURRENT = FILE_CURRENT,
-    MM_END     = FILE_END
+    MM_END     = FILE_END,
   } eMoveMethodFlags;
 
   typedef enum _FILE_GENERIC_FLAGS {
@@ -914,7 +915,7 @@ namespace ce {
     FG_EXECUTE    = GENERIC_EXECUTE,
     FG_WRITE      = GENERIC_WRITE,
     FG_READ       = GENERIC_READ,
-    FG_READWRITE  = GENERIC_READ | GENERIC_WRITE
+    FG_READWRITE  = GENERIC_READ | GENERIC_WRITE,
   } eFileGenericFlags;
 
   // CESocket
@@ -930,7 +931,7 @@ namespace ce {
     SAF_NETBIOS   = AF_NETBIOS,
     SAF_INET6     = AF_INET6,
     SAF_IRDA      = AF_IRDA,
-    SAF_BTH       = AF_IRDA
+    SAF_BTH       = AF_IRDA,
   } eSocketAF;
 
   typedef enum _SOCKET_TYPE {
@@ -939,7 +940,7 @@ namespace ce {
     ST_DGRAM     = SOCK_DGRAM,
     ST_RAW       = SOCK_RAW,
     ST_RDM       = SOCK_RDM,
-    ST_SEQPACKET = SOCK_RDM
+    ST_SEQPACKET = SOCK_RDM,
   } eSocketType;
 
 #define BTHPROTO_RFCOMM 3
@@ -969,14 +970,14 @@ namespace ce {
     SM_WAITALL   = MSG_WAITALL,
     SM_PARTIAL   = MSG_PARTIAL,
     SM_INTERRUPT = MSG_INTERRUPT,
-    SM_MAXIOVLEN = MSG_MAXIOVLEN
+    SM_MAXIOVLEN = MSG_MAXIOVLEN,
   } eSocketMessage;
 
   typedef enum _SHUTDOWN_FLAG {
     SF_UNKNOWN = -1,
     SF_RECEIVE = 0,
     SF_SEND,
-    SF_BOTH
+    SF_BOTH,
   } eShutdownFlag;
 
   // CEService
@@ -993,7 +994,7 @@ namespace ce {
     SAT_INTERROGATE          = SERVICE_INTERROGATE,
     SAT_USER_DEFINED_CONTROL = SERVICE_USER_DEFINED_CONTROL,
     SAT_ALL_ACCESS           = SERVICE_ALL_ACCESS,
-    SAT_DELETE               = DELETE
+    SAT_DELETE               = DELETE,
   } eServiceAccessType;
 
   typedef enum _SERVICE_TYPE {
@@ -1003,7 +1004,7 @@ namespace ce {
     ST_ADAPTER             = SERVICE_ADAPTER,
     ST_RECOGNIZER_DRIVER   = SERVICE_RECOGNIZER_DRIVER,
     ST_WIN32_OWN_PROCESS   = SERVICE_WIN32_OWN_PROCESS,
-    ST_WIN32_SHARE_PROCESS = SERVICE_WIN32_SHARE_PROCESS
+    ST_WIN32_SHARE_PROCESS = SERVICE_WIN32_SHARE_PROCESS,
   } eServiceType;
 
   typedef enum _SERVICE_STATE {
@@ -1014,7 +1015,7 @@ namespace ce {
     SS_RUNNING          = SERVICE_RUNNING,
     SS_CONTINUE_PENDING = SERVICE_CONTINUE_PENDING,
     SS_PAUSE_PENDING    = SERVICE_PAUSE_PENDING,
-    SS_PAUSED           = SERVICE_PAUSED
+    SS_PAUSED           = SERVICE_PAUSED,
   } eServiceState;
 
   #ifndef SERVICE_CONTROL_PRESHUTDOWN
@@ -1046,7 +1047,7 @@ namespace ce {
     SC_SESSIONCHANGE         = SERVICE_CONTROL_SESSIONCHANGE,
     SC_PRESHUTDOWN           = SERVICE_CONTROL_PRESHUTDOWN,
     SC_TIMECHANGE            = SERVICE_CONTROL_TIMECHANGE,
-    SC_TRIGGEREVENT          = SERVICE_CONTROL_TRIGGEREVENT
+    SC_TRIGGEREVENT          = SERVICE_CONTROL_TRIGGEREVENT,
   } eServiceControl;
 
   typedef enum _SERVICE_START_TYPE {
@@ -1055,7 +1056,7 @@ namespace ce {
     SST_SYSTEM_START = SERVICE_SYSTEM_START,
     SST_AUTO_START   = SERVICE_AUTO_START,
     SST_DEMAND_START = SERVICE_DEMAND_START,
-    SST_DISABLED     = SERVICE_DISABLED
+    SST_DISABLED     = SERVICE_DISABLED,
   } eServiceStartType;
 
   typedef enum _SERVICE_ERROR_CONTROL_TYPE {
@@ -1063,7 +1064,7 @@ namespace ce {
     SE_IGNORE   = SERVICE_ERROR_IGNORE,
     SE_NORMAL   = SERVICE_ERROR_NORMAL,
     SE_SEVERE   = SERVICE_ERROR_SEVERE,
-    SE_CRITICAL = SERVICE_ERROR_CRITICAL
+    SE_CRITICAL = SERVICE_ERROR_CRITICAL,
   } eServiceErrorControlType;
 
   typedef enum _SC_ACCESS_TYPE {
@@ -1073,7 +1074,7 @@ namespace ce {
     SC_LOCK               = SC_MANAGER_LOCK,
     SC_QUERY_LOCK_STATUS  = SC_MANAGER_QUERY_LOCK_STATUS,
     SC_MODIFY_BOOT_CONFIG = SC_MANAGER_MODIFY_BOOT_CONFIG,
-    SC_ALL_ACCESS         = SC_MANAGER_ALL_ACCESS
+    SC_ALL_ACCESS         = SC_MANAGER_ALL_ACCESS,
   } eSCAccessType;
 
   // CERegistry
@@ -1113,7 +1114,7 @@ namespace ce {
     RA_READ               = KEY_READ,
     RA_WRITE              = KEY_WRITE,
     RA_EXECUTE            = KEY_EXECUTE,
-    RA_ALL_ACCESS         = KEY_ALL_ACCESS
+    RA_ALL_ACCESS         = KEY_ALL_ACCESS,
   } eRegAccess;
 
   typedef enum _REG_REFLECTION {
@@ -1121,26 +1122,35 @@ namespace ce {
     RR_DISABLED = 0,
     RR_ENABLED  = 1,
     RR_DISABLE  = 2,
-    RR_ENABLE   = 3
+    RR_ENABLE   = 3,
   } eRegReflection;
 
   typedef enum _TRIM_STRING {
     TS_LEFT  = 0,
     TS_RIGHT = 1,
-    TS_BOTH  = 2
+    TS_BOTH  = 2,
   } eTrimType;
+
+  typedef enum _ENCODING_TYPE {
+    ET_UNKNOWN        = -1,
+    ET_UTF8           = 0, /* aka ANSI */
+    ET_UTF8_BOM       = 1, /* EF BB BF */
+    ET_UNICODE_LE     = 2,
+    ET_UNICODE_BE     = 3,
+    ET_UNICODE_LE_BOM = 4, /* FF FE */
+    ET_UNICODE_BE_BOM = 5, /* FE FF */
+  } eEncodingType;
 
 
 
   /* ------------------------------------------------ Public Macro(s) ------------------------------------------------ */
 
-  #define ceLenOf(X) (sizeof(X) / sizeof(X[0]))
-
-  #define ceIsSigned(T) (std::is_signed<T>())
-  #define ceIsExact(T) (std::numeric_limits<T>::is_exact)
-  #define ceGetLowest(T) (std::numeric_limits<T>::lowest())
-  #define ceGetHighest(T) (std::numeric_limits<T>::max())
-  #define ceGetDigits(T) (std::numeric_limits<T>::digits)
+  #define ceFundamentalTypeLengthOf(X) (sizeof(X) / sizeof(X[0]))
+  #define ceFundamentalTypeIsSigned(T) (std::is_signed<T>())
+  #define ceFundamentalTypeIsExact(T) (std::numeric_limits<T>::is_exact)
+  #define ceFundamentalTypeGetLowest(T) (std::numeric_limits<T>::lowest())
+  #define ceFundamentalTypeGetHighest(T) (std::numeric_limits<T>::max())
+  #define ceFundamentalTypeGetDigits(T) (std::numeric_limits<T>::digits)
 
   /* ---------------------------------------------- Public Function(s) ---------------------------------------------- */
 
@@ -1197,6 +1207,7 @@ namespace ce {
   std::wstring ceapi ceFormatDateTimeW(const time_t t, const std::wstring Format);
   std::string ceapi ceDateTimeToStringA(const time_t t);
   std::wstring ceapi ceDateTimeToStringW(const time_t t);
+  eEncodingType ceapi ceDetermineEncodingType(const void* Data, const size_t size);
 
   /* --- Cat: String Working --- */
   std::string ceapi ceLowerStringA(const std::string& String);
@@ -1225,7 +1236,7 @@ namespace ce {
   );
 
   /* --- Cat: Process Working --- */
-  HWND ceapi ceGetConsoleWindow();
+  HWND ceapi ceGetConsoleWindowHandle();
   eProcessorArchitecture ceGetProcessorArchitecture();
   eWow64 ceapi ceIsWow64(ulong ulPID = (ulong)-1); /* -1: Error, 0: False, 1: True */
   std::vector<ulong> ceapi ceNameToPidA(const std::string& ProcessName, ulong ulMaxProcessNumber = MAX_NPROCESSES);
@@ -1365,11 +1376,11 @@ namespace ce {
 
   /* --- Cat : Library --- */
 
-  #define API_GETPROC(M, F) pfn ## F = (Pfn ## F)ce::CELibrary::ceQuickGetRoutineAddress(_T( # M ), _T( # F ))
+  #define API_GETPROC(M, F) pfn ## F = (Pfn ## F)ce::CELibrary::ceQuickGetProcAddress(_T( # M ), _T( # F ))
 
   // Custom macros. Don't use there macro. Only use theme for some special case.
-  #define API_GETPROCV(MV, F) pfn ## F = (Pfn ## F)MV.ceGetRoutineAddress(_T( # F ));
-  #define API_GETPROCVA(MV, F) pfn ## F ## A = (Pfn ## F ## A)MV.ceGetRoutineAddress(_T( # F ));
+  #define API_GETPROCV(MV, F) pfn ## F = (Pfn ## F)MV.ceGetProcAddress(_T( # F ));
+  #define API_GETPROCVA(MV, F) pfn ## F ## A = (Pfn ## F ## A)MV.ceGetProcAddress(_T( # F ));
 
   class CELibraryA : public CELastError {
   public:
@@ -1379,12 +1390,12 @@ namespace ce {
     virtual ~CELibraryA();
 
     bool  ceapi ceIsLibraryAvailable();
-    void* ceapi ceGetRoutineAddress();
-    void* ceapi ceGetRoutineAddress(const std::string& RoutineName);
-    void* ceapi ceGetRoutineAddress(const std::string& ModuleName, const std::string& RoutineName);
-    static void* ceapi ceQuickGetRoutineAddress(const std::string& ModuleName, const std::string& RoutineName);
+    void* ceapi ceGetProcAddress();
+    void* ceapi ceGetProcAddress(const std::string& ProcName);
+    void* ceapi ceGetProcAddress(const std::string& ModuleName, const std::string& ProcName);
+    static void* ceapi ceQuickGetProcAddress(const std::string& ModuleName, const std::string& ProcName);
   private:
-    std::string m_ModuleName, m_RoutineName;
+    std::string m_ModuleName, m_ProcName;
   protected:
   };
 
@@ -1392,16 +1403,16 @@ namespace ce {
   public:
     CELibraryW();
     CELibraryW(const std::wstring& ModuleName);
-    CELibraryW(const std::wstring& ModuleName, const std::wstring& RoutineName);
+    CELibraryW(const std::wstring& ModuleName, const std::wstring& ProcName);
     virtual ~CELibraryW();
 
     bool  ceapi ceIsLibraryAvailable();
-    void* ceapi ceGetRoutineAddress();
-    void* ceapi ceGetRoutineAddress(const std::wstring& RoutineName);
-    void* ceapi ceGetRoutineAddress(const std::wstring& ModuleName, const std::wstring& RoutineName);
-    static void* ceapi ceQuickGetRoutineAddress(const std::wstring& ModuleName, const std::wstring& RoutineName);
+    void* ceapi ceGetProcAddress();
+    void* ceapi ceGetProcAddress(const std::wstring& RoutineName);
+    void* ceapi ceGetProcAddress(const std::wstring& ModuleName, const std::wstring& ProcName);
+    static void* ceapi ceQuickGetProcAddress(const std::wstring& ModuleName, const std::wstring& ProcName);
   private:
-    std::wstring m_ModuleName, m_RoutineName;
+    std::wstring m_ModuleName, m_ProcName;
   protected:
   };
 
@@ -1477,7 +1488,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
       MAT_8    = 1,
       MAT_16   = 2,
       MAT_32   = 3,
-      MAT_64   = 4
+      MAT_64   = 4,
     } eMemoryAddressType;
 
     typedef struct _MEMORY_INSTRUCTION {
@@ -1571,10 +1582,11 @@ const std::string CE_LOCALHOST = "127.0.0.1";
   class CEFileSupport : public CELastError {
   public:
     CEFileSupport(){};
-    virtual ~CEFileSupport(){};
+    virtual ~CEFileSupport();
     virtual bool ceapi ceIsFileHandleValid(HANDLE fileHandle);
     virtual bool ceapi ceIsReady();
     virtual ulong ceapi ceGetFileSize();
+    virtual const CEBinary ceapi ceReadContent();
     virtual bool ceapi ceRead(void* Buffer, ulong ulSize);
     virtual bool ceapi ceRead(
       ulong ulOffset,
@@ -1607,6 +1619,13 @@ const std::string CE_LOCALHOST = "127.0.0.1";
   class CEFileA: public CEFileSupport {
   public:
     CEFileA(){};
+    CEFileA(
+      const std::string& FilePath,
+      eFileModeFlags fmFlag,
+      eFileGenericFlags fgFlag   = FG_READWRITE,
+      eFileShareFlags fsFlag     = FS_ALLACCESS,
+      eFileAttributeFlags faFlag = FA_NORMAL
+    );
     virtual ~CEFileA(){};
     bool ceapi ceInit(
       const std::string& FilePath,
@@ -1615,12 +1634,21 @@ const std::string CE_LOCALHOST = "127.0.0.1";
       eFileShareFlags fsFlag     = FS_ALLACCESS,
       eFileAttributeFlags faFlag = FA_NORMAL
     );
+    const std::string ceapi ceReadFileAsString(bool forceBOM = true);
+    static const std::string ceapi ceQuickReadFileAsString(const std::string& FilePath, bool forceBOM = true);
   protected:
   };
 
   class CEFileW: public CEFileSupport {
   public:
     CEFileW(){};
+    CEFileW(
+      const std::wstring& FilePath,
+      eFileModeFlags fmFlag,
+      eFileGenericFlags fgFlag   = FG_READWRITE,
+      eFileShareFlags fsFlag     = FS_ALLACCESS,
+      eFileAttributeFlags faFlag = FA_NORMAL
+    );
     virtual ~CEFileW(){};
     bool ceapi ceInit(
       const std::wstring& FilePath,
@@ -1629,6 +1657,8 @@ const std::string CE_LOCALHOST = "127.0.0.1";
       eFileShareFlags fsFlag   = FS_ALLACCESS,
       eFileAttributeFlags faFlag = FA_NORMAL
     );
+    const std::wstring ceapi ceReadFileAsString(bool forceBOM = true);
+    static const std::wstring ceapi ceQuickReadFileAsString(const std::wstring& FilePath, bool forceBOM = true);
   protected:
   };
 
@@ -2059,7 +2089,7 @@ const std::string CE_LOCALHOST = "127.0.0.1";
 
   typedef enum _IMPORTED_FUNCTION_FIND_BY {
     IFFM_HINT,
-    IFFM_NAME
+    IFFM_NAME,
   } eImportedFunctionFindMethod;
 
   template <typename T>
