@@ -1,7 +1,7 @@
 /**********************************************************/
 /*  Name:     CatEngine                                   */
 /*  Version:  1.0                                         */
-/*  Platform: Windows 32-bit & 64-bit                       */
+/*  Platform: Windows 32-bit & 64-bit                     */
 /*  Type:     C++ Library for MSVC++/C++MinGW/C++Builder  */
 /*  Author:   Vic P. aka vic4key                          */
 /*  Mail:     vic4key[at]gmail.com                        */
