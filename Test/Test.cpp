@@ -174,7 +174,8 @@ int _tmain(int argc, _TCHAR* argv[])
   std::tcout  << ce::ceGetCurrentFilePath() << std::endl;*/
 
   // Not complete
-  /*std::vector<ce::ulong> explorersPID = ce::ceNameToPid(_T("explorer.exe"));
+  /*bool process64Bit = false;
+  std::vector<ce::ulong> explorersPID = ce::ceNameToPid(process64Bit ? _T("explorer.exe") : _T("IDMan.exe"));
   if (explorersPID.size() == 0) {
     return 1;
   }

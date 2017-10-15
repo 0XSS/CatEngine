@@ -53,6 +53,7 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <ctime>
 #ifndef _WINSOCKAPI_
 #include <WinSock2.h>
 #endif
@@ -2059,6 +2060,25 @@ const std::string CE_LOCALHOST = "127.0.0.1";
 
     TCriticalSection& ceapi ceGetCurrentSection();
   protected:
+  };
+
+  /* --- Cat : Stop Watch --- */
+
+  class CEStopWatch
+  {
+  public:
+    typedef std::pair<unsigned long, float> TDuration;
+  public:
+    CEStopWatch();
+    ~CEStopWatch();
+    void ceStart(bool reset = true);
+    const TDuration ceStop();
+    const TDuration ceDuration();
+  private:
+    bool m_Reset;
+    float m_Duration;
+    std::clock_t m_Count, m_Delta;
+    std::vector<std::clock_t> m_DeltaHistory;
   };
 
   /* --- Cat : PE File --- */

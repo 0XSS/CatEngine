@@ -4977,6 +4977,59 @@ namespace ce {
     return m_CriticalSection;
   }
 
+  /* --- Cat : Stop Watch --- */
+
+  CEStopWatch::CEStopWatch()
+  {
+    m_Reset = true;
+    m_Count = 0;
+    m_Delta = 0;
+    m_Duration = 0;
+    m_DeltaHistory.clear();
+  }
+
+  CEStopWatch::~CEStopWatch()
+  {
+    m_DeltaHistory.clear();
+  }
+
+  void CEStopWatch::ceStart(bool reset)
+  {
+    m_Reset = reset;
+
+    if (m_Reset)
+    {
+      m_Duration = 0;
+      m_DeltaHistory.clear();
+    }
+
+    m_Count = std::clock();
+  }
+
+  const CEStopWatch::TDuration CEStopWatch::ceStop()
+  {
+    m_Delta = std::clock() - m_Count;
+
+    if (!m_Reset) m_DeltaHistory.push_back(m_Delta);
+
+    return this->ceDuration();
+  }
+
+  const CEStopWatch::TDuration CEStopWatch::ceDuration()
+  {
+    if (!m_Reset)
+    {
+      auto N = m_DeltaHistory.size();
+      for (decltype(N) i = 0; N >= 2, i < N - 1; i++) m_Delta += m_DeltaHistory.at(i);
+    }
+
+    m_Duration = (float(m_Delta) / float(CLOCKS_PER_SEC));
+
+    TDuration duration(m_Delta, m_Duration);
+
+    return duration;
+  }
+
   /* --- Cat : File Working --- */
 
   CEFileSupport::~CEFileSupport()
