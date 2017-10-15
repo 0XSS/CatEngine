@@ -967,17 +967,17 @@ namespace ce {
         { /* UTF-8 BOM */
           if ((size >= 3) && (p[0] == 0xEF && p[1] == 0xBB && p[2] == 0xBF)) return eEncodingType::ET_UTF8_BOM;
         }
-        { /* Unicode */
+        { /* UTF16 */
           if (
             (size >= 4) &&
             ((p[0] >= SCHAR_MIN && p[0] <= SCHAR_MAX) && (p[1] == 0x00)) &&
             ((p[2] >= SCHAR_MIN && p[0] <= SCHAR_MAX) && (p[3] == 0x00)) &&
             (true)
-            ) return eEncodingType::ET_UNICODE_LE;
+            ) return eEncodingType::ET_UTF16_LE;
         }
-        { /* Unicode BOM */
-          if (p[0] == 0xFF && p[1] == 0xFE) return eEncodingType::ET_UNICODE_LE_BOM;
-          if (p[0] == 0xFE && p[1] == 0xFF) return eEncodingType::ET_UNICODE_BE_BOM;
+        { /* UTF16 BOM */
+          if (p[0] == 0xFF && p[1] == 0xFE) return eEncodingType::ET_UTF16_LE_BOM;
+          if (p[0] == 0xFE && p[1] == 0xFF) return eEncodingType::ET_UTF16_BE_BOM;
         }
         { /* UTF-8 */
           if ((p[0] >= SCHAR_MIN && p[0] <= SCHAR_MAX) && (p[1] >= SCHAR_MIN && p[1] <= SCHAR_MAX)) {
@@ -5295,8 +5295,8 @@ namespace ce {
     auto p = (wchar*)pContent.GetpData();
 
     auto encodingType = ceDetermineEncodingType(pContent.GetpData(), pContent.GetSize());
-    if (encodingType == eEncodingType::ET_UNICODE_LE || encodingType == eEncodingType::ET_UNICODE_LE_BOM) {
-      if (forceBOM && encodingType == eEncodingType::ET_UNICODE_LE_BOM) {
+    if (encodingType == eEncodingType::ET_UTF16_LE || encodingType == eEncodingType::ET_UTF16_LE_BOM) {
+      if (forceBOM && encodingType == eEncodingType::ET_UTF16_LE_BOM) {
         p = (wchar*)((char*)pContent.GetpData() + 2); /* remove BOM */
       }
     }

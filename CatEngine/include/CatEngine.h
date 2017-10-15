@@ -1133,13 +1133,13 @@ namespace ce {
   } eTrimType;
 
   typedef enum _ENCODING_TYPE {
-    ET_UNKNOWN        = -1,
-    ET_UTF8           = 0, /* aka ANSI */
-    ET_UTF8_BOM       = 1, /* EF BB BF */
-    ET_UNICODE_LE     = 2,
-    ET_UNICODE_BE     = 3,
-    ET_UNICODE_LE_BOM = 4, /* FF FE */
-    ET_UNICODE_BE_BOM = 5, /* FE FF */
+    ET_UNKNOWN      = -1,
+    ET_UTF8         = 0, /* aka ANSI */
+    ET_UTF8_BOM     = 1, /* EF BB BF */
+    ET_UTF16_LE     = 2,
+    ET_UTF16_BE     = 3,
+    ET_UTF16_LE_BOM = 4, /* FF FE */
+    ET_UTF16_BE_BOM = 5, /* FE FF */
   } eEncodingType;
 
 
