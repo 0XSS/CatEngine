@@ -1,24 +1,23 @@
-/*****************************************************/
-/*  Name:     CatEngine                              */
-/*  Version:  1.0                                    */
-/*  Platform: Windows 32-bit/64-bit                  */
-/*  Type:     C++ Library for MSVC/MinGW/C++Builder  */
-/*  Author:   Vic P. aka vic4key                     */
-/*  Mail:     vic4key[at]gmail.com                   */
-/*  Blog:     http://viclab.biz                      */
-/*  Website:  http://cin1team.biz                    */
-/*****************************************************/
+/**********************************************************/
+/*  Name:     CatEngine                                   */
+/*  Version:  1.0                                         */
+/*  Platform: Windows 32-bit & 64-bit                       */
+/*  Type:     C++ Library for MSVC++/C++MinGW/C++Builder  */
+/*  Author:   Vic P. aka vic4key                          */
+/*  Mail:     vic4key[at]gmail.com                        */
+/*  Blog:     http://viclab.biz                           */
+/*  Website:  http://cin1team.biz                         */
+/**********************************************************/
 
 #ifndef CATENGINE_H
 #define CATENGINE_H
 
-/* Notice for use CatEngine!!
-  1. Just available on Windows 32-bit and 64-bit.
-  2. Support MSVC++, C++ Builder, MingGW.
-  3. Only support C++ compiler.
-  4. If you compile by MinGW, remember to include lws2_32.
-  5. Force BYTE alignment of structures.
-  6. Remember to use ce namespace.
+/* Note :
+  1. Available for both Windows 32-bit and 64-bit.
+  2. Available for MSVC++, C++ Builder, C++ MingGW.
+  3. With MinGW compiler, required library `lws2_32`.
+  4. Force BYTE alignment of structures.
+  5. Finally, remember to use `ce` namespace.
 */
 
 /* CatEngine Version */
@@ -35,7 +34,7 @@
 #endif // !defined(_WIN32) && !defined(_WIN64)
 
 #ifndef __cplusplus
-  #error CatEngine only support C++ compiler
+  #error CatEngine only supported C++ compiler
 #endif // __cplusplus
 
 
@@ -782,7 +781,7 @@ namespace ce {
     DWORD   dwSize;
     DWORD   cntUsage;
     DWORD   th32ProcessID;          // this process
-    ULONG	th32DefaultHeapID;
+    ULONG th32DefaultHeapID;
     DWORD   th32ModuleID;           // associated exe
     DWORD   cntThreads;
     DWORD   th32ParentProcessID;    // this process's parent process

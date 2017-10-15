@@ -7266,4 +7266,3 @@ BOOL IsExecutableAddress(LPVOID pAddress)
 };
 
 // --- End of Internal Buffer Handler --- //
-
