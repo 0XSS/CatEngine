@@ -1424,7 +1424,7 @@ namespace ce {
   ulong ceapi ceGetParentPID(ulong ulChildPID)
   {
     if (ceInitTlHelp32() != CE_OK) {
-      return (ulong)INVALID_HANDLE_VALUE;
+      return (ulong)-1;
     }
 
     TProcessEntry32A pe;
